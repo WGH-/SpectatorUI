@@ -1,4 +1,4 @@
-class SpectatorUI_Mut extends Mutator;
+class SpectatorUI_Mut extends UTMutator;
 
 function PostBeginPlay() {
     super.PostBeginPlay();
