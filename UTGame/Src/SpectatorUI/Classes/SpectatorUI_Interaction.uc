@@ -52,17 +52,41 @@ simulated event PostRender(Canvas Canvas) {
 }
 
 simulated static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
-    local bool old;
-    old = P.bPostRenderOtherTeam;
+    local bool bPostRenderOtherTeam;
+    local float TeamBeaconMaxDist;
+    local float TeamBeaconPlayerInfoMaxDist;
+
+    bPostRenderOtherTeam = P.bPostRenderOtherTeam;
+    TeamBeaconMaxDist = P.TeamBeaconMaxDist;
+    TeamBeaconPlayerInfoMaxDist = P.TeamBeaconPlayerInfoMaxDist;
+
     P.bPostRenderOtherTeam = true;
+    P.TeamBeaconMaxDist *= 3;
+    P.TeamBeaconPlayerInfoMaxDist *= 3;
+
     P.NativePostRenderFor(PC, Canvas, Loc, Dir);
-    P.bPostRenderOtherTeam = old;
+
+    P.bPostRenderOtherTeam = bPostRenderOtherTeam;
+    P.TeamBeaconMaxDist = TeamBeaconMaxDist;
+    P.TeamBeaconPlayerInfoMaxDist = TeamBeaconPlayerInfoMaxDist;
 }
 
 simulated static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
-    local bool old;
-    old = V.bPostRenderOtherTeam;
+    local bool bPostRenderOtherTeam;
+    local float TeamBeaconMaxDist;
+    local float TeamBeaconPlayerInfoMaxDist;
+
+    bPostRenderOtherTeam = V.bPostRenderOtherTeam;
+    TeamBeaconMaxDist = V.TeamBeaconMaxDist;
+    TeamBeaconPlayerInfoMaxDist = V.TeamBeaconPlayerInfoMaxDist;
+
     V.bPostRenderOtherTeam = true;
+    V.TeamBeaconMaxDist *= 3;
+    V.TeamBeaconPlayerInfoMaxDist *= 3;
+
     V.NativePostRenderFor(PC, Canvas, Loc, Dir);
-    V.bPostRenderOtherTeam = old;
+
+    V.bPostRenderOtherTeam = bPostRenderOtherTeam;
+    V.TeamBeaconMaxDist = TeamBeaconMaxDist;
+    V.TeamBeaconPlayerInfoMaxDist = TeamBeaconPlayerInfoMaxDist;
 }
