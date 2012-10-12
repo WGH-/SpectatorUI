@@ -1,5 +1,12 @@
 class SpectatorUI_Interaction extends Interaction within PlayerController;
 
+struct SpectatorUI_SpeedBind {
+    var name Key;
+    var int Value;
+};
+var array<SpectatorUI_SpeedBind> SpeedBinds;
+var int Speeds[10];
+
 simulated static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
     local SpectatorUI_Interaction SUI_Interaction;
@@ -11,7 +18,9 @@ simulated static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController
     }
     
     SUI_Interaction = new(PC) default.class;
-    PC.Interactions.AddItem(SUI_Interaction);
+    // have to insert it first so it could intercept
+    // bound keys
+    PC.Interactions.InsertItem(0, SUI_Interaction);
     return SUI_Interaction;
 }
 
@@ -94,4 +103,56 @@ simulated static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController 
 exec function SpecSpeed(byte x)
 {
     Outer.bRun = x;
+}
+
+function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
+{
+    local int i;
+    if (ShouldRender() && LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
+        if (EventType ==  IE_Released) {
+            i = SpeedBinds.Find('Key', Key);
+            if (i != INDEX_NONE) {
+                SpecSpeed(Speeds[SpeedBinds[i].Value]);
+            }
+        }
+    }
+    return false;
+}
+
+defaultproperties
+{
+    OnReceivedNativeInputKey=HandleInputKey
+
+    SpeedBinds.Add((Key=one,Value=0))
+    SpeedBinds.Add((Key=two,Value=1))
+    SpeedBinds.Add((Key=three,Value=2))
+    SpeedBinds.Add((Key=four,Value=3))
+    SpeedBinds.Add((Key=five,Value=4))
+    SpeedBinds.Add((Key=six,Value=5))
+    SpeedBinds.Add((Key=seven,Value=6))
+    SpeedBinds.Add((Key=eight,Value=7))
+    SpeedBinds.Add((Key=nine,Value=8))
+    SpeedBinds.Add((Key=zero,Value=9))
+
+    SpeedBinds.Add((Key=NumPadone,Value=1))
+    SpeedBinds.Add((Key=NumPadtwo,Value=2))
+    SpeedBinds.Add((Key=NumPadthree,Value=3))
+    SpeedBinds.Add((Key=NumPadfour,Value=4))
+    SpeedBinds.Add((Key=NumPadfive,Value=5))
+    SpeedBinds.Add((Key=NumPadsix,Value=6))
+    SpeedBinds.Add((Key=NumPadseven,Value=7))
+    SpeedBinds.Add((Key=NumPadeight,Value=8))
+    SpeedBinds.Add((Key=NumPadnine,Value=9))
+    SpeedBinds.Add((Key=NumPadzero,Value=0))
+
+    Speeds[0] = 0
+    Speeds[1] = 1
+    Speeds[2] = 2
+    Speeds[3] = 4
+    Speeds[4] = 8
+    Speeds[5] = 16
+    Speeds[6] = 32
+    Speeds[7] = 64
+    Speeds[8] = 128
+    Speeds[9] = 255
 }
