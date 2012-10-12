@@ -100,9 +100,9 @@ simulated static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController 
     V.TeamBeaconPlayerInfoMaxDist = TeamBeaconPlayerInfoMaxDist;
 }
 
-exec function SpectatorUI_SetSpeed(byte x)
+exec function SpectatorUI_SetSpeed(int x)
 {
-    bRun = x;
+    bRun = clamp(x - 1, 0, 255);
 }
 
 exec function SpectatorUI_AddSpeed(int x)
