@@ -90,3 +90,8 @@ simulated static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController 
     V.TeamBeaconMaxDist = TeamBeaconMaxDist;
     V.TeamBeaconPlayerInfoMaxDist = TeamBeaconPlayerInfoMaxDist;
 }
+
+exec function SpecSpeed(byte x)
+{
+    Outer.bRun = x;
+}
