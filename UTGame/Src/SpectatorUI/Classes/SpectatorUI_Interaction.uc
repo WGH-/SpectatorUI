@@ -100,9 +100,24 @@ simulated static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController 
     V.TeamBeaconPlayerInfoMaxDist = TeamBeaconPlayerInfoMaxDist;
 }
 
-exec function SpecSpeed(byte x)
+exec function SpectatorUI_SetSpeed(byte x)
 {
-    Outer.bRun = x;
+    bRun = x;
+}
+
+exec function SpectatorUI_AddSpeed(int x)
+{
+    bRun = clamp(bRun + x, 0, 255);
+}
+
+exec function SpectatorUI_MultiplySpeed(int x)
+{
+    bRun = clamp((1 + bRun << x) - 1, 0, 255);
+}
+
+exec function SpectatorUI_DivideSpeed(int x)
+{
+    bRun = clamp((1 + bRun >> x) - 1, 0, 255);
 }
 
 function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
@@ -112,7 +127,7 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
         if (EventType ==  IE_Released) {
             i = SpeedBinds.Find('Key', Key);
             if (i != INDEX_NONE) {
-                SpecSpeed(Speeds[SpeedBinds[i].Value]);
+                bRun = Speeds[SpeedBinds[i].Value];
             }
         }
     }
