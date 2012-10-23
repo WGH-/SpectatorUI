@@ -7,6 +7,8 @@ struct SpectatorUI_SpeedBind {
 var array<SpectatorUI_SpeedBind> SpeedBinds;
 var int Speeds[10];
 
+var SpectatorUI_ReplicationInfo RI;
+
 simulated static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
     local SpectatorUI_Interaction SUI_Interaction;
@@ -29,6 +31,7 @@ static final function bool SameDirection(vector a, vector b) {
 }
 
 simulated function bool ShouldRender() {
+    // XXX change to IsInState('Spectating')?
     return IsSpectating();
 }
 
@@ -123,11 +126,26 @@ exec function SpectatorUI_DivideSpeed(int x)
 function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
     local int i;
+    local string BindString;
+
     if (ShouldRender() && LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
         if (EventType ==  IE_Released) {
             i = SpeedBinds.Find('Key', Key);
             if (i != INDEX_NONE) {
                 bRun = Speeds[SpeedBinds[i].Value];
+            } else if (key == 'Q') {
+                RI.Test();
+            } else {
+                // XXX don't do that for "temporary" spectators
+                BindString = PlayerInput.GetBind(Key);
+
+                if (BindString == "GBA_NextWeapon") {
+                    `log("N");
+                    return true;
+                } else if (BindString == "GBA_PrevWeapon") {
+                    `log("P");
+                    return true;
+                }
             }
         }
     }

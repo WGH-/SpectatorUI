@@ -1,7 +1,9 @@
 class SpectatorUI_Mut extends UTMutator;
 
-function PostBeginPlay() {
-    super.PostBeginPlay();
-    Spawn(class'SpectatorUI_ReplicationInfo');
-    Destroy(); // job's done, destroying
+function NotifyLogin(Controller NewPlayer) {
+    super.NotifyLogin(NewPlayer);
+
+    if (true || NewPlayer.PlayerReplicationInfo.bOnlySpectator) {
+        Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer);
+    }
 }

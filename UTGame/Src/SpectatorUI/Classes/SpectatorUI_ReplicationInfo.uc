@@ -1,20 +1,44 @@
 class SpectatorUI_ReplicationInfo extends ReplicationInfo;
 
-simulated event PostBeginPlay() {
-    super.PostBeginPlay(); 
+var repnotify Actor Owner_;
 
-    if (WorldInfo.NetMode != NM_DedicatedServer) {
-        // we can't be sure that PlayerController ad its HUD exist at this point
-        SetTimer(1.0f, true);
-        Timer();
+replication {
+    if (bNetOwner && bNetDirty)
+        Owner_;
+}
+
+simulated event ReplicatedEvent(name VarName)
+{
+    local SpectatorUI_Interaction SUI;
+
+    super.ReplicatedEvent(VarName);
+
+    if (VarName == 'Owner_') {
+        SetOwner(Owner_);
+        if (PlayerController(Owner) != None) {
+            SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PlayerController(Owner));
+            SUI.RI = self;
+        }
     }
 }
 
-simulated function Timer() {
-    local PlayerController PC;
-    foreach LocalPlayerControllers(class'PlayerController', PC) {
-        if (class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PC) != None) {
-            ClearTimer();
-        }
+simulated event PostBeginPlay() {
+    super.PostBeginPlay(); 
+
+    if (Role == ROLE_Authority) {
+        Owner_ = Owner;
     }
+}
+
+reliable server function Test() {
+    `log("TEST");
+}
+
+reliable client function ClientTest() {
+    `log("TEST");
+}
+
+defaultproperties
+{
+    bOnlyRelevantToOwner=true
 }
