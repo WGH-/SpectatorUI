@@ -9,7 +9,7 @@ var int Speeds[10];
 
 var SpectatorUI_ReplicationInfo RI;
 
-simulated static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
+static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
     local SpectatorUI_Interaction SUI_Interaction;
 
@@ -30,12 +30,12 @@ static final function bool SameDirection(vector a, vector b) {
     return a dot b >= 0;
 }
 
-simulated function bool ShouldRender() {
+function bool ShouldRender() {
     // XXX change to IsInState('Spectating')?
     return IsSpectating();
 }
 
-simulated event PostRender(Canvas Canvas) {
+event PostRender(Canvas Canvas) {
     local vector Loc, Dir;
     local rotator Rot;
     local UTHUD HUD;
@@ -63,7 +63,7 @@ simulated event PostRender(Canvas Canvas) {
     }
 }
 
-simulated static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
+static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
     local bool bPostRenderOtherTeam;
     local float TeamBeaconMaxDist;
     local float TeamBeaconPlayerInfoMaxDist;
@@ -83,7 +83,7 @@ simulated static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Ca
     P.TeamBeaconPlayerInfoMaxDist = TeamBeaconPlayerInfoMaxDist;
 }
 
-simulated static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
+static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
     local bool bPostRenderOtherTeam;
     local float TeamBeaconMaxDist;
     local float TeamBeaconPlayerInfoMaxDist;
