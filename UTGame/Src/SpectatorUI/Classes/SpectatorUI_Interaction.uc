@@ -9,6 +9,12 @@ var int Speeds[10];
 
 var SpectatorUI_ReplicationInfo RI;
 
+var int SelectedPRIIndex;
+var int RealSelectedPRIIndex;
+var int TotalPRIs;
+var bool SelectionInProgress;
+var float PlayerSwitchDelay;
+
 static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
     local SpectatorUI_Interaction SUI_Interaction;
@@ -61,6 +67,8 @@ event PostRender(Canvas Canvas) {
             UTVehicle_PostRenderFor(UTVehicle(A), Outer, Canvas, Loc, Dir);
         }
     }
+
+    RenderPlayerList(Canvas);
 }
 
 static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
@@ -123,6 +131,14 @@ exec function SpectatorUI_DivideSpeed(int x)
     bRun = clamp((1 + bRun >> x) - 1, 0, 255);
 }
 
+static final operator(18) float mod(int a, int b)
+{
+    local int res;
+    res = a - (a / b) * b;
+    if (res < 0) res += b;
+    return res;
+}
+
 function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {
     local int i;
@@ -134,16 +150,13 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
             if (i != INDEX_NONE) {
                 bRun = Speeds[SpeedBinds[i].Value];
             } else if (key == 'Q') {
-                RI.Test();
             } else {
-                // XXX don't do that for "temporary" spectators
                 BindString = PlayerInput.GetBind(Key);
-
                 if (BindString == "GBA_NextWeapon") {
-                    `log("N");
+                    PlayerSelect(+1);
                     return true;
                 } else if (BindString == "GBA_PrevWeapon") {
-                    `log("P");
+                    PlayerSelect(-1);
                     return true;
                 }
             }
@@ -152,9 +165,84 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
     return false;
 }
 
+function bool IsValidSpectatorTarget(PlayerReplicationInfo PRI)
+{
+    return PRI != None && !PRI.bOnlySpectator;
+}
+
+function PlayerSelect(int increment)
+{
+    local PlayerReplicationInfo PRI;
+
+    if (!SelectionInProgress) {
+        SelectionInProgress = true;
+        
+        TotalPRIs = 0;
+        foreach UTHUD(myHUD).UTGRI.PRIArray(PRI) {
+            if (IsValidSpectatorTarget(PRI)) {
+                if (RealViewTarget == PRI) {
+                    SelectedPRIIndex = TotalPRIs;
+                }
+                TotalPRIs++;
+            }
+        } 
+    }
+    SelectedPRIIndex = (SelectedPRIIndex + increment) mod TotalPRIs;
+    
+    SetTimer(PlayerSwitchDelay, false, 'EndPlayerSelect', self);
+}
+
+function EndPlayerSelect()
+{
+    SelectionInProgress = false;
+    RI.ServerViewPlayer(UTHUD(myHUD).UTGRI.PRIArray[RealSelectedPRIIndex]);
+}
+
+function RenderPlayerList(Canvas C)
+{
+    local UTHUD HUD;
+    local PlayerReplicationInfo PRI;
+    local string s;
+    local int Index;
+    local LinearColor LC;
+    HUD = UTHUD(myHUD);
+    if (HUD == None) return;
+    
+    if (SelectionInProgress) {
+        C.Reset(true);
+        C.SetPos(2.0, C.ClipY / 4);
+    }
+    TotalPRIs = 0;
+    foreach HUD.UTGRI.PRIArray(PRI, Index) {
+        if (IsValidSpectatorTarget(PRI)) {
+            if (SelectionInProgress) {
+                if (PRI.Team != None) {
+                    HUD.GetTeamcolor(PRI.GetTeamNum(), LC);
+                    C.SetDrawColor(
+                        Clamp(LC.R * 255.0, 0, 255), 
+                        Clamp(LC.G * 255.0, 0, 255),
+                        Clamp(LC.B * 255.0, 0, 255)
+                    );
+                } else {
+                    C.DrawColor = class'Canvas'.default.DrawColor;
+                }
+                s = PRI.GetPlayerAlias();
+                if (TotalPRIs == SelectedPRIIndex) {
+                    s = s $ " <<<";
+                    RealSelectedPRIIndex = Index;
+                }
+                C.DrawText(s, true); 
+            }
+            TotalPRIs++;
+        }
+    }
+}
+
 defaultproperties
 {
     OnReceivedNativeInputKey=HandleInputKey
+
+    PlayerSwitchDelay=0.5
 
     SpeedBinds.Add((Key=one,Value=0))
     SpeedBinds.Add((Key=two,Value=1))

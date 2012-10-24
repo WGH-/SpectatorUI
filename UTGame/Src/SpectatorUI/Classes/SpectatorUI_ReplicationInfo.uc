@@ -15,7 +15,7 @@ simulated event ReplicatedEvent(name VarName)
 
     if (VarName == 'Owner_') {
         SetOwner(Owner_);
-        if (PlayerController(Owner) != None) {
+        if (WorldInfo.NetMode != NM_DedicatedServer && PlayerController(Owner) != None) {
             SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PlayerController(Owner));
             SUI.RI = self;
         }
@@ -30,12 +30,29 @@ simulated event PostBeginPlay() {
     }
 }
 
-reliable server function Test() {
-    `log("TEST");
+simulated event Destroyed() {
+    local int i;
+    local PlayerController PC;
+
+    if (WorldInfo.NetMode != NM_DedicatedServer) {
+        PC = PlayerController(Owner);
+
+        for (i = 0; i < PC.Interactions.Length; i++) {
+            if (SpectatorUI_Interaction(PC.Interactions[i]) != None) {
+                PC.Interactions.Remove(i, 1);
+                break;
+            }
+        }
+    }
+
+    super.Destroyed();
 }
 
-reliable client function ClientTest() {
-    `log("TEST");
+reliable server function ServerViewPlayer(PlayerReplicationInfo PRI)
+{
+    if (PlayerController(Owner).IsSpectating()) {
+        PlayerController(Owner).SetViewTarget(PRI); 
+    }
 }
 
 defaultproperties
