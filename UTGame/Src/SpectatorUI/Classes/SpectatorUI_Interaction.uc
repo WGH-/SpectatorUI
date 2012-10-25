@@ -151,6 +151,8 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
 {
     local int i;
     local string BindString;
+    local vector Loc;
+    local rotator Rot;
 
     if (ShouldRender() && LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
         if (EventType ==  IE_Released) {
@@ -169,6 +171,12 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                 } else if (BindString == "GBA_PrevWeapon") {
                     PlayerSelect(-1);
                     return true;
+                } else if (BindString == "GBA_AltFire") {
+                    GetPlayerViewPoint(Loc, Rot);
+                    ServerViewSelf();
+                    SetLocation(Loc);
+                    SetRotation(Rot);
+                    return true; 
                 }
             }
         } else if (EventType == IE_Pressed) {
