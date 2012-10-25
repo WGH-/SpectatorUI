@@ -231,6 +231,7 @@ function RenderPlayerList(Canvas C)
     C.SetPos(2.0, C.ClipY / 5);
 
     foreach PRIs(PRI, Index) {
+        if (PRI == None) continue;
         if (PRI.Team != None) {
             HUD.GetTeamcolor(PRI.GetTeamNum(), LC);
             C.SetDrawColor(
