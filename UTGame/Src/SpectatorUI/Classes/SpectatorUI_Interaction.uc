@@ -1,4 +1,6 @@
-class SpectatorUI_Interaction extends Interaction within PlayerController;
+class SpectatorUI_Interaction extends Interaction 
+    within PlayerController
+    config(SpectatorUI);
 
 struct SpectatorUI_SpeedBind {
     var name Key;
@@ -13,7 +15,9 @@ var int SelectedPRIIndex;
 var int RealSelectedPRIIndex;
 var int TotalPRIs;
 var bool SelectionInProgress;
-var float PlayerSwitchDelay;
+var config float PlayerSwitchDelay;
+
+var SpectatorUI_Bookmarks Bookmarks;
 
 static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
@@ -26,6 +30,7 @@ static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     }
     
     SUI_Interaction = new(PC) default.class;
+    SUI_Interaction.Bookmarks = new(None, PC.WorldInfo.GetMapName(true)) class'SpectatorUI_Bookmarks';
     // have to insert it first so it could intercept
     // bound keys
     PC.Interactions.InsertItem(0, SUI_Interaction);
