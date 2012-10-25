@@ -259,8 +259,8 @@ function BookmarkButtonPressed(Name Key)
     B.Name = Key;
 
     if (BookmarkModifierButtonHeld) {
-        B.Location = Outer.Location;
-        B.Rotation = Outer.Rotation;
+        B.Location = Location;
+        B.Rotation = Rotation;
         Bookmarks.SaveBookmark(B);
     } else {
         if (Bookmarks.LoadBookmark(B)) {
