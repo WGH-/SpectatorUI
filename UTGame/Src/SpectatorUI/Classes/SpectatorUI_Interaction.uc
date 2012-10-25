@@ -260,6 +260,13 @@ function RenderPlayerList(Canvas C)
         }
         C.SetPos(2.0 + XL, C.ClipY / 5 + Index * YL);
         s = PRI.GetPlayerAlias();
+        if (PRI.bHasFlag) {
+            if (UTOnslaughtGRI(WorldInfo.GRI) != None) {
+                s @= "[ORB]";
+            } else {
+                s @= "[FLAG]";
+            }
+        }
         C.DrawText(s); 
     }
 }
