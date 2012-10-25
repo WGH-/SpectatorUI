@@ -285,6 +285,8 @@ function BookmarkButtonPressed(Name Key)
             ServerViewSelf();
             SetLocation(B.Location);
             SetRotation(B.Rotation);
+        } else {
+            ClientMessage("Bookmark" @ Key @ "is not set. Press" @ BookmarkModifierButton $ "+" $ Key @ "to set it.");
         }
     }
 }
