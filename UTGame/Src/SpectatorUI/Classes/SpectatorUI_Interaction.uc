@@ -17,7 +17,10 @@ var int TotalPRIs;
 var bool SelectionInProgress;
 var config float PlayerSwitchDelay;
 
+var config Name BookmarkModifierButton;
+var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
+var array<Name> BookmarkKeys;
 
 static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
@@ -154,7 +157,10 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
             i = SpeedBinds.Find('Key', Key);
             if (i != INDEX_NONE) {
                 bRun = Speeds[SpeedBinds[i].Value];
-            } else if (key == 'Q') {
+            } else if (key == BookmarkModifierButton) {
+                BookmarkModifierButtonHeld = false;
+            } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
+                BookmarkButtonPressed(Key); 
             } else {
                 BindString = PlayerInput.GetBind(Key);
                 if (BindString == "GBA_NextWeapon") {
@@ -164,6 +170,10 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     PlayerSelect(-1);
                     return true;
                 }
+            }
+        } else if (EventType == IE_Pressed) {
+            if (key == BookmarkModifierButton) {
+                BookmarkModifierButtonHeld = true;
             }
         }
     }
@@ -243,11 +253,30 @@ function RenderPlayerList(Canvas C)
     }
 }
 
+function BookmarkButtonPressed(Name Key)
+{
+    local SpectatorUI_Bookmarks.BookmarkStruct B;
+    B.Name = Key;
+
+    if (BookmarkModifierButtonHeld) {
+        B.Location = Outer.Location;
+        B.Rotation = Outer.Rotation;
+        Bookmarks.SaveBookmark(B);
+    } else {
+        if (Bookmarks.LoadBookmark(B)) {
+            ServerViewSelf();
+            SetLocation(B.Location);
+            SetRotation(B.Rotation);
+        }
+    }
+}
+
 defaultproperties
 {
     OnReceivedNativeInputKey=HandleInputKey
 
     PlayerSwitchDelay=0.5
+    BookmarkModifierButton=LeftAlt
 
     SpeedBinds.Add((Key=one,Value=0))
     SpeedBinds.Add((Key=two,Value=1))
@@ -260,16 +289,27 @@ defaultproperties
     SpeedBinds.Add((Key=nine,Value=8))
     SpeedBinds.Add((Key=zero,Value=9))
 
-    SpeedBinds.Add((Key=NumPadone,Value=1))
-    SpeedBinds.Add((Key=NumPadtwo,Value=2))
-    SpeedBinds.Add((Key=NumPadthree,Value=3))
-    SpeedBinds.Add((Key=NumPadfour,Value=4))
-    SpeedBinds.Add((Key=NumPadfive,Value=5))
-    SpeedBinds.Add((Key=NumPadsix,Value=6))
-    SpeedBinds.Add((Key=NumPadseven,Value=7))
-    SpeedBinds.Add((Key=NumPadeight,Value=8))
-    SpeedBinds.Add((Key=NumPadnine,Value=9))
-    SpeedBinds.Add((Key=NumPadzero,Value=0))
+    //SpeedBinds.Add((Key=NumPadone,Value=1))
+    //SpeedBinds.Add((Key=NumPadtwo,Value=2))
+    //SpeedBinds.Add((Key=NumPadthree,Value=3))
+    //SpeedBinds.Add((Key=NumPadfour,Value=4))
+    //SpeedBinds.Add((Key=NumPadfive,Value=5))
+    //SpeedBinds.Add((Key=NumPadsix,Value=6))
+    //SpeedBinds.Add((Key=NumPadseven,Value=7))
+    //SpeedBinds.Add((Key=NumPadeight,Value=8))
+    //SpeedBinds.Add((Key=NumPadnine,Value=9))
+    //SpeedBinds.Add((Key=NumPadzero,Value=0))
+
+    BookmarkKeys.Add(NumPadOne)
+    BookmarkKeys.Add(NumPadTwo)
+    BookmarkKeys.Add(NumPadThree)
+    BookmarkKeys.Add(NumPadFour)
+    BookmarkKeys.Add(NumPadFive)
+    BookmarkKeys.Add(NumPadSix)
+    BookmarkKeys.Add(NumPadSeven)
+    BookmarkKeys.Add(NumPadEight)
+    BookmarkKeys.Add(NumPadNine)
+    BookmarkKeys.Add(NumPadZero)
 
     Speeds[0] = 0
     Speeds[1] = 1
