@@ -11,9 +11,8 @@ var int Speeds[10];
 
 var SpectatorUI_ReplicationInfo RI;
 
+var array<PlayerReplicationInfo> PRIs;
 var int SelectedPRIIndex;
-var int RealSelectedPRIIndex;
-var int TotalPRIs;
 var bool SelectionInProgress;
 var config float PlayerSwitchDelay;
 
@@ -75,8 +74,9 @@ event PostRender(Canvas Canvas) {
             UTVehicle_PostRenderFor(UTVehicle(A), Outer, Canvas, Loc, Dir);
         }
     }
-
-    RenderPlayerList(Canvas);
+    if (SelectionInProgress) {
+        RenderPlayerList(Canvas);
+    }
 }
 
 static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
@@ -191,26 +191,30 @@ function PlayerSelect(int increment)
 
     if (!SelectionInProgress) {
         SelectionInProgress = true;
-        
-        TotalPRIs = 0;
+        PRIs.Length = 0;
         foreach UTHUD(myHUD).UTGRI.PRIArray(PRI) {
             if (IsValidSpectatorTarget(PRI)) {
+                PRIs.AddItem(PRI);
                 if (RealViewTarget == PRI) {
-                    SelectedPRIIndex = TotalPRIs;
+                    SelectedPRIIndex = PRIs.Length - 1;
                 }
-                TotalPRIs++;
             }
         } 
     }
-    SelectedPRIIndex = (SelectedPRIIndex + increment) mod TotalPRIs;
-    
+    if (PRIs.Length == 0) {
+        SelectionInProgress = false;
+        return;
+    }
+        
+    SelectedPRIIndex = (SelectedPRIIndex + increment) mod PRIs.Length;
     SetTimer(PlayerSwitchDelay, false, 'EndPlayerSelect', self);
 }
 
 function EndPlayerSelect()
 {
     SelectionInProgress = false;
-    RI.ServerViewPlayer(UTHUD(myHUD).UTGRI.PRIArray[RealSelectedPRIIndex]);
+    RI.ServerViewPlayer(PRIs[SelectedPRIIndex]);
+    PRIs.Length = 0;
 }
 
 function RenderPlayerList(Canvas C)
@@ -223,33 +227,25 @@ function RenderPlayerList(Canvas C)
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
     
-    if (SelectionInProgress) {
-        C.Reset(true);
-        C.SetPos(2.0, C.ClipY / 4);
-    }
-    TotalPRIs = 0;
-    foreach HUD.UTGRI.PRIArray(PRI, Index) {
-        if (IsValidSpectatorTarget(PRI)) {
-            if (SelectionInProgress) {
-                if (PRI.Team != None) {
-                    HUD.GetTeamcolor(PRI.GetTeamNum(), LC);
-                    C.SetDrawColor(
-                        Clamp(LC.R * 255.0, 0, 255), 
-                        Clamp(LC.G * 255.0, 0, 255),
-                        Clamp(LC.B * 255.0, 0, 255)
-                    );
-                } else {
-                    C.DrawColor = class'Canvas'.default.DrawColor;
-                }
-                s = PRI.GetPlayerAlias();
-                if (TotalPRIs == SelectedPRIIndex) {
-                    s = s $ " <<<";
-                    RealSelectedPRIIndex = Index;
-                }
-                C.DrawText(s, true); 
-            }
-            TotalPRIs++;
+    C.Reset(true);
+    C.SetPos(2.0, C.ClipY / 5);
+
+    foreach PRIs(PRI, Index) {
+        if (PRI.Team != None) {
+            HUD.GetTeamcolor(PRI.GetTeamNum(), LC);
+            C.SetDrawColor(
+                Clamp(LC.R * 255.0, 0, 255), 
+                Clamp(LC.G * 255.0, 0, 255),
+                Clamp(LC.B * 255.0, 0, 255)
+            );
+        } else {
+            C.DrawColor = class'Canvas'.default.DrawColor;
         }
+        s = PRI.GetPlayerAlias();
+        if (Index == SelectedPRIIndex) {
+            s = s $ " <<<";
+        }
+        C.DrawText(s, true); 
     }
 }
 
