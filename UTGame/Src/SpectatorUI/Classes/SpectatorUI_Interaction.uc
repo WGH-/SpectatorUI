@@ -224,11 +224,15 @@ function RenderPlayerList(Canvas C)
     local string s;
     local int Index;
     local LinearColor LC;
+    local string SelectedPrefix;
+    local float XL, YL;
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
+
+    SelectedPrefix = ">   ";
+    C.StrLen(SelectedPrefix, XL, YL);
     
     C.Reset(true);
-    C.SetPos(2.0, C.ClipY / 5);
 
     foreach PRIs(PRI, Index) {
         if (PRI == None) continue;
@@ -242,11 +246,13 @@ function RenderPlayerList(Canvas C)
         } else {
             C.DrawColor = class'Canvas'.default.DrawColor;
         }
-        s = PRI.GetPlayerAlias();
         if (Index == SelectedPRIIndex) {
-            s = s $ " <<<";
+            C.SetPos(2.0, C.ClipY / 5 + Index * YL);
+            C.DrawText(SelectedPrefix);
         }
-        C.DrawText(s, true); 
+        C.SetPos(2.0 + XL, C.ClipY / 5 + Index * YL);
+        s = PRI.GetPlayerAlias();
+        C.DrawText(s); 
     }
 }
 
