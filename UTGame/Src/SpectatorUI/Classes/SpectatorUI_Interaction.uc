@@ -155,12 +155,12 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
     local rotator Rot;
 
     if (ShouldRender() && LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
-        if (EventType ==  IE_Released) {
+        if (EventType ==  IE_Pressed) {
             i = SpeedBinds.Find('Key', Key);
             if (i != INDEX_NONE) {
                 bRun = Speeds[SpeedBinds[i].Value];
             } else if (key == BookmarkModifierButton) {
-                BookmarkModifierButtonHeld = false;
+                BookmarkModifierButtonHeld = true;
             } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                 BookmarkButtonPressed(Key); 
             } else {
@@ -173,15 +173,15 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     return true;
                 } else if (BindString == "GBA_AltFire") {
                     GetPlayerViewPoint(Loc, Rot);
-                    ServerViewSelf();
                     SetLocation(Loc);
                     SetRotation(Rot);
+                    ServerViewSelf();
                     return true; 
                 }
             }
-        } else if (EventType == IE_Pressed) {
+        } else if (EventType == IE_Released) {
             if (key == BookmarkModifierButton) {
-                BookmarkModifierButtonHeld = true;
+                BookmarkModifierButtonHeld = false;
             }
         }
     }
