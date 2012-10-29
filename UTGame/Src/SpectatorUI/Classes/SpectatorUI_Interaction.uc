@@ -237,10 +237,10 @@ function RenderPlayerList(Canvas C)
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
 
+    C.Reset(true);
     SelectedPrefix = ">   ";
     C.StrLen(SelectedPrefix, XL, YL);
     
-    C.Reset(true);
 
     foreach PRIs(PRI, Index) {
         if (PRI == None) continue;
