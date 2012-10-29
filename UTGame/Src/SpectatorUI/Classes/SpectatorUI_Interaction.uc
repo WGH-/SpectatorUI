@@ -251,13 +251,14 @@ function RenderPlayerList(Canvas C)
     
     C.Reset();
     C.Font = HUD.GetFontSizeIndex(1);
-    C.ClipX = 2.0 + GetLongestPlayerListEntry(C) + 2.0;
 
-    SelectedPrefix = ">  ";
     C.StrLen(SelectedPrefix, XL, YL);
     
+    C.SetOrigin(0.0, C.ClipY / 6);
+    C.ClipX = GetLongestPlayerListEntry(C) + 2.0;
+    
+    C.SetPos(0.0, 0.0);
     C.SetDrawColor(0, 0, 0, 200);
-    C.SetPos(0.0, C.ClipY / 5);
     C.DrawRect(C.ClipX, YL * PRIs.Length);
 
     foreach PRIs(PRI, Index) {
@@ -273,10 +274,10 @@ function RenderPlayerList(Canvas C)
             C.DrawColor = class'Canvas'.default.DrawColor;
         }
         if (Index == SelectedPRIIndex) {
-            C.SetPos(2.0, C.ClipY / 5 + Index * YL);
+            C.SetPos(0.0, Index * YL);
             C.DrawTextClipped(SelectedPrefix);
         }
-        C.SetPos(2.0 + XL, C.ClipY / 5 + Index * YL);
+        C.SetPos(0.0 + XL, Index * YL);
         s = PRI.GetPlayerAlias();
         if (PRI.bHasFlag) {
             if (UTOnslaughtGRI(WorldInfo.GRI) != None) {
