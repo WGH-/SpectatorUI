@@ -15,6 +15,7 @@ var array<PlayerReplicationInfo> PRIs;
 var int SelectedPRIIndex;
 var bool SelectionInProgress;
 var config float PlayerSwitchDelay;
+var string SelectedPrefix;
 
 var config Name BookmarkModifierButton;
 var bool BookmarkModifierButtonHeld;
@@ -225,6 +226,18 @@ function EndPlayerSelect()
     PRIs.Length = 0;
 }
 
+function float GetLongestPlayerListEntry(Canvas C)
+{
+    local PlayerReplicationInfo PRI;
+    local float XL, YL;
+    local float Res;
+    foreach PRIs(PRI) {
+        C.StrLen(SelectedPrefix $ PRI.GetPlayerAlias() $ " [FLAG]", XL, YL);
+        if (XL > Res) Res = XL;
+    }
+    return Res;
+}
+
 function RenderPlayerList(Canvas C)
 {
     local UTHUD HUD;
@@ -232,15 +245,20 @@ function RenderPlayerList(Canvas C)
     local string s;
     local int Index;
     local LinearColor LC;
-    local string SelectedPrefix;
     local float XL, YL;
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
+    
+    C.Reset();
+    C.Font = HUD.GetFontSizeIndex(1);
+    C.ClipX = 2.0 + GetLongestPlayerListEntry(C) + 2.0;
 
-    C.Reset(true);
-    SelectedPrefix = ">   ";
+    SelectedPrefix = ">  ";
     C.StrLen(SelectedPrefix, XL, YL);
     
+    C.SetDrawColor(0, 0, 0, 200);
+    C.SetPos(0.0, C.ClipY / 5);
+    C.DrawRect(C.ClipX, YL * PRIs.Length);
 
     foreach PRIs(PRI, Index) {
         if (PRI == None) continue;
@@ -256,7 +274,7 @@ function RenderPlayerList(Canvas C)
         }
         if (Index == SelectedPRIIndex) {
             C.SetPos(2.0, C.ClipY / 5 + Index * YL);
-            C.DrawText(SelectedPrefix);
+            C.DrawTextClipped(SelectedPrefix);
         }
         C.SetPos(2.0 + XL, C.ClipY / 5 + Index * YL);
         s = PRI.GetPlayerAlias();
@@ -267,7 +285,7 @@ function RenderPlayerList(Canvas C)
                 s @= "[FLAG]";
             }
         }
-        C.DrawText(s); 
+        C.DrawTextClipped(s); 
     }
 }
 
@@ -296,6 +314,8 @@ defaultproperties
     OnReceivedNativeInputKey=HandleInputKey
 
     PlayerSwitchDelay=0.5
+    SelectedPrefix=">  "
+
     BookmarkModifierButton=LeftAlt
 
     SpeedBinds.Add((Key=one,Value=0))
