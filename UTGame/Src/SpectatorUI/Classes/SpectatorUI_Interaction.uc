@@ -162,6 +162,8 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                 bRun = Speeds[SpeedBinds[i].Value];
             } else if (key == BookmarkModifierButton) {
                 BookmarkModifierButtonHeld = true;
+            } else if (Key == 'Multiply') {
+                RI.ServerViewPointOfInterest();
             } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                 BookmarkButtonPressed(Key); 
             } else {
