@@ -1,22 +1,23 @@
 class SpectatorUI_Mut extends UTMutator;
 
-function NotifyLogin(Controller NewPlayer) {
-    super.NotifyLogin(NewPlayer);
+var array<SpectatorUI_ReplicationInfo> RIs;
 
+function NotifyLogin(Controller NewPlayer) {
     if (NewPlayer.PlayerReplicationInfo.bOnlySpectator) {
-        Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer);
+        RIs.AddItem(Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer));
     }
+    super.NotifyLogin(NewPlayer);
 }
 
 function NotifyBecomeActivePlayer(PlayerController Player) {
-    local SpectatorUI_ReplicationInfo RI;
+    local int i;
 
-    super.NotifyBecomeActivePlayer(Player);
-
-    foreach DynamicActors(class'SpectatorUI_ReplicationInfo', RI) {
-        if (RI.Owner == Player) {
-            RI.Destroy();
+    for (i = 0; i < RIs.Length; i++) {
+        if (RIs[i].Owner == Player) {
+            RIs[i].Destroy();
+            RIs.Remove(i, 1);
             break;
         }
     }
+    super.NotifyBecomeActivePlayer(Player);
 }
