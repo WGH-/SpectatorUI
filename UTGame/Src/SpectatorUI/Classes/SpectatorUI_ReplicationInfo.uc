@@ -59,6 +59,7 @@ reliable server function ServerViewPlayer(PlayerReplicationInfo PRI) {
 }
 
 function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {
+    // TODO keep several last points
     if (Other.Controller != None && Other.Controller.PlayerReplicationInfo != None) {
         PointOfInterest = Other.Controller.PlayerReplicationInfo;
         ClientInterestingPickupTaken(ItemClass, Other.Controller.PlayerReplicationInfo.GetPlayerAlias());
@@ -66,8 +67,18 @@ function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pi
 }
 
 reliable client function ClientInterestingPickupTaken(class<Inventory> What, string Who) {
+    local string Desc;
+
+    Desc = What.default.ItemName;
+    if (Desc == "") {
+        Desc = What.default.PickupMessage;
+    }
+    if (Desc == "") {
+        Desc = string(What.name);
+    }
+    
     PlayerController(Owner).ClientMessage(
-        What.default.ItemName @ "has been picked up by" @ Who $ "." $
+        Desc @ "has been picked up by" @ Who $ "." $
         " Press * to jump to that player."
     );
 }
