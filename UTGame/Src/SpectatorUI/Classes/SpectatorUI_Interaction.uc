@@ -175,11 +175,13 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     PlayerSelect(-1);
                     return true;
                 } else if (BindString == "GBA_AltFire") {
-                    GetPlayerViewPoint(Loc, Rot);
-                    SetLocation(Loc);
-                    SetRotation(Rot);
-                    ServerViewSelf();
-                    return true; 
+                    if (AnimatedCamera(PlayerCamera) == None) {
+                        GetPlayerViewPoint(Loc, Rot);
+                        SetLocation(Loc);
+                        SetRotation(Rot);
+                        ServerViewSelf();
+                        return true;
+                    }
                 }
             }
         } else if (EventType == IE_Released) {
