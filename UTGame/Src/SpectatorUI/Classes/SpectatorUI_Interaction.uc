@@ -207,18 +207,27 @@ function bool IsValidSpectatorTarget(PlayerReplicationInfo PRI)
 function PlayerSelect(int increment)
 {
     local PlayerReplicationInfo PRI;
+    local TeamInfo TI;
+    local UTGameReplicationInfo UTGRI;
+    local int TeamIndex;
 
     if (SelectionInProgress == SS_None) {
         SelectionInProgress = SS_InProgress;
         PRIs.Length = 0;
-        foreach UTHUD(myHUD).UTGRI.PRIArray(PRI) {
-            if (IsValidSpectatorTarget(PRI)) {
-                PRIs.AddItem(PRI);
-                if (RealViewTarget == PRI) {
-                    SelectedPRIIndex = PRIs.Length - 1;
+
+        UTGRI = UTHUD(myHUD).UTGRI;
+        
+        for (TeamIndex = 0; TeamIndex < UTGRI.Teams.Length + 1; TeamIndex++) {
+            TI = TeamIndex < UTGRI.Teams.Length ? UTGRI.Teams[TeamIndex] : None;
+            foreach UTGRI.PRIArray(PRI) {
+                if (PRI.Team == TI && IsValidSpectatorTarget(PRI)) {
+                    PRIs.AddItem(PRI);
+                    if (RealViewTarget == PRI) {
+                        SelectedPRIIndex = PRIs.Length - 1;
+                    }
                 }
             }
-        } 
+        }
     }
     if (PRIs.Length == 0) {
         SelectionInProgress = SS_None;
