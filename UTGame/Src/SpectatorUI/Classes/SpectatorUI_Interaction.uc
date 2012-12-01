@@ -13,8 +13,14 @@ var SpectatorUI_ReplicationInfo RI;
 
 var array<PlayerReplicationInfo> PRIs;
 var int SelectedPRIIndex;
-var bool SelectionInProgress;
+enum ESelectionState {
+    SS_None,
+    SS_InProgress,
+    SS_PostSelect
+};
+var ESelectionState SelectionInProgress;
 var config float PlayerSwitchDelay;
+var config float PostPlayerSwitchDelay;
 var string SelectedPrefix;
 
 var config Name BookmarkModifierButton;
@@ -75,7 +81,7 @@ event PostRender(Canvas Canvas) {
             UTVehicle_PostRenderFor(UTVehicle(A), Outer, Canvas, Loc, Dir);
         }
     }
-    if (SelectionInProgress) {
+    if (SelectionInProgress != SS_None) {
         RenderPlayerList(Canvas);
     }
 }
@@ -202,8 +208,8 @@ function PlayerSelect(int increment)
 {
     local PlayerReplicationInfo PRI;
 
-    if (!SelectionInProgress) {
-        SelectionInProgress = true;
+    if (SelectionInProgress == SS_None) {
+        SelectionInProgress = SS_InProgress;
         PRIs.Length = 0;
         foreach UTHUD(myHUD).UTGRI.PRIArray(PRI) {
             if (IsValidSpectatorTarget(PRI)) {
@@ -215,19 +221,28 @@ function PlayerSelect(int increment)
         } 
     }
     if (PRIs.Length == 0) {
-        SelectionInProgress = false;
+        SelectionInProgress = SS_None;
         return;
     }
         
     SelectedPRIIndex = (SelectedPRIIndex + increment) mod PRIs.Length;
+    if (SelectionInProgress == SS_PostSelect) {
+        SelectionInProgress = SS_InProgress;
+    }
     SetTimer(PlayerSwitchDelay, false, 'EndPlayerSelect', self);
 }
 
 function EndPlayerSelect()
 {
-    SelectionInProgress = false;
-    RI.ServerViewPlayer(PRIs[SelectedPRIIndex]);
-    PRIs.Length = 0;
+    if (SelectionInProgress == SS_InProgress) {
+        SelectionInProgress = SS_PostSelect;
+    
+        RI.ServerViewPlayer(PRIs[SelectedPRIIndex]);
+        SetTimer(PostPlayerSwitchDelay, false, 'EndPlayerSelect', self);
+    } else if (SelectionInProgress == SS_PostSelect) {
+        SelectionInProgress = SS_None;
+        PRIs.Length = 0;
+    }
 }
 
 function float GetLongestPlayerListEntry(Canvas C)
@@ -328,6 +343,7 @@ defaultproperties
     OnReceivedNativeInputKey=HandleInputKey
 
     PlayerSwitchDelay=0.5
+    PostPlayerSwitchDelay=2.0
     SelectedPrefix=">  "
 
     BookmarkModifierButton=LeftAlt
