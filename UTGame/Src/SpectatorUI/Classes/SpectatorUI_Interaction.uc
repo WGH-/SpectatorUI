@@ -262,11 +262,20 @@ function RenderPlayerList(Canvas C)
     C.ClipX = GetLongestPlayerListEntry(C) + 2.0;
     
     C.SetPos(0.0, 0.0);
-    C.SetDrawColor(0, 0, 0, 200);
+    C.SetDrawColor(0, 0, 0, 100);
     C.DrawRect(C.ClipX, YL * PRIs.Length);
 
     foreach PRIs(PRI, Index) {
         if (PRI == None) continue;
+
+        if (Index == SelectedPRIIndex) {
+            // background for currently selected player
+            // should be darker
+            C.SetDrawColor(0, 0, 0, 200);
+            C.SetPos(0.0, Index * YL);
+            C.DrawRect(C.ClipX, YL);
+        }
+
         if (PRI.Team != None) {
             HUD.GetTeamcolor(PRI.GetTeamNum(), LC);
             C.SetDrawColor(
