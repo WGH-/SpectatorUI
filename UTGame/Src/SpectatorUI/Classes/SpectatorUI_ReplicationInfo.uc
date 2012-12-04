@@ -6,11 +6,26 @@ var repnotify Actor Owner_;
 var SpectatorUI_Interaction SUI;
 
 // set only on server
-var Actor PointOfInterest;
+struct PointsOfInterestContainer {
+    var Actor Actors[3];
+    var int Ptr; // current pos 
+    var int ReadPtr;
+};
+var PointsOfInterestContainer PointsOfInterest;
 
 replication {
     if (bNetOwner && bNetDirty)
         Owner_;
+}
+
+// struct PointsOfInterestContainer "methods"
+
+function AddInterestingActor(Actor A) {
+    PointsOfInterest.Actors[PointsOfInterest.Ptr] = A;
+    PointsOfInterest.ReadPtr = PointsOfInterest.Ptr;
+    if (++PointsOfInterest.Ptr == ArrayCount(PointsOfInterest.Actors)) {
+        PointsOfInterest.Ptr = 0;
+    }
 }
 
 simulated event ReplicatedEvent(name VarName)
@@ -59,9 +74,8 @@ reliable server function ServerViewPlayer(PlayerReplicationInfo PRI) {
 }
 
 function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {
-    // TODO keep several last points
     if (Other.Controller != None && Other.Controller.PlayerReplicationInfo != None) {
-        PointOfInterest = Other.Controller.PlayerReplicationInfo;
+        AddInterestingActor(Other.Controller.PlayerReplicationInfo);
         ClientInterestingPickupTaken(ItemClass, Other.Controller.PlayerReplicationInfo);
     }
 }
@@ -84,8 +98,16 @@ reliable client function ClientInterestingPickupTaken(class<Inventory> What, Pla
 }
 
 reliable server function ServerViewPointOfInterest() {
+    local Actor A;
     if (PlayerController(Owner).IsSpectating()) {
-        PlayerController(Owner).SetViewTarget(PointOfInterest); 
+        A = PointsOfInterest.Actors[PointsOfInterest.ReadPtr];
+        if (A == None) return; // empty yet
+
+        PlayerController(Owner).SetViewTarget(A); 
+
+        do {
+            if (--PointsOfInterest.ReadPtr < 0) PointsOfInterest.ReadPtr = ArrayCount(PointsOfInterest.Actors) - 1;
+        } until (PointsOfInterest.ReadPtr == PointsOfInterest.Ptr || PointsOfInterest.Actors[PointsOfInterest.ReadPtr] != None);
     }
 }
 
