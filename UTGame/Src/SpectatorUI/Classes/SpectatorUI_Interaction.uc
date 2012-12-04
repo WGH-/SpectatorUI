@@ -79,6 +79,8 @@ event PostRender(Canvas Canvas) {
             UTPawn_PostRenderFor(UTPawn(A), Outer, Canvas, Loc, Dir);
         } else if (UTVehicle(A) != None) {
             UTVehicle_PostRenderFor(UTVehicle(A), Outer, Canvas, Loc, Dir);
+        } else if (UTOnslaughtFlag(A) != None) {
+            UTOnslaughtFlag_PostRenderFor(UTOnslaughtFlag(A), Outer, Canvas, Loc, Dir);
         }
     }
     if (SelectionInProgress != SS_None) {
@@ -124,6 +126,10 @@ static function UTVehicle_PostRenderFor(UTVehicle V, PlayerController PC, Canvas
     V.bPostRenderOtherTeam = bPostRenderOtherTeam;
     V.TeamBeaconMaxDist = TeamBeaconMaxDist;
     V.TeamBeaconPlayerInfoMaxDist = TeamBeaconPlayerInfoMaxDist;
+}
+
+static function UTOnslaughtFlag_PostRenderFor(UTOnslaughtFlag O, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
+    O.PostRenderFor(PC, Canvas, Loc, Dir);
 }
 
 exec function SpectatorUI_SetSpeed(int x)
