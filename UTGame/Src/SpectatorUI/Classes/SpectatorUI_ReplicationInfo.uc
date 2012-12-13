@@ -47,6 +47,7 @@ simulated function TryAttachInteraction() {
     if (PC.Player == None) {
         // hack: don't do that unless PC has player
         SetTimer(0.1, false, 'TryAttachInteraction');
+        return;
     }
     SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PC);
     SUI.RI = self;
