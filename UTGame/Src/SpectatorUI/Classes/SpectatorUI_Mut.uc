@@ -10,6 +10,13 @@ function InitMutator(string Options, out string ErrorMessage) {
     super.InitMutator(Options, ErrorMessage);
 }
 
+function bool CheckReplacement(Actor Other) {
+    if (DemoRecSpectator(Other) != None) {
+        RIs.AddItem(Spawn(class'SpectatorUI_ReplicationInfo', Other));
+    }
+    return true;
+}
+
 function NotifyLogin(Controller NewPlayer) {
     if (NewPlayer.PlayerReplicationInfo.bOnlySpectator) {
         RIs.AddItem(Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer));

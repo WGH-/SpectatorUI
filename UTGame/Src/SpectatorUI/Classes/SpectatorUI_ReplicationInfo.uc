@@ -35,10 +35,21 @@ simulated event ReplicatedEvent(name VarName)
     if (VarName == 'Owner_') {
         SetOwner(Owner_);
         if (WorldInfo.NetMode != NM_DedicatedServer && PlayerController(Owner) != None) {
-            SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PlayerController(Owner));
-            SUI.RI = self;
+            TryAttachInteraction();
         }
     }
+}
+
+simulated function TryAttachInteraction() {
+    local PlayerController PC;
+    PC = PlayerController(Owner);
+    
+    if (PC.Player == None) {
+        // hack: don't do that unless PC has player
+        SetTimer(0.1, false, 'TryAttachInteraction');
+    }
+    SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PC);
+    SUI.RI = self;
 }
 
 simulated event PostBeginPlay() {
@@ -67,10 +78,22 @@ simulated event Destroyed() {
     super.Destroyed();
 }
 
-reliable server function ServerViewPlayer(PlayerReplicationInfo PRI) {
+simulated function ViewPlayer(PlayerReplicationInfo PRI) {
+    if (DemoRecSpectator(Owner) != None) {
+        DemoViewPlayer(PRI); 
+    } else {
+        ServerViewPlayer(PRI);
+    }
+}
+
+reliable server protected function ServerViewPlayer(PlayerReplicationInfo PRI) {
     if (PlayerController(Owner).IsSpectating()) {
         PlayerController(Owner).SetViewTarget(PRI); 
     }
+}
+
+simulated protected function DemoViewPlayer(PlayerReplicationInfo PRI) {
+    DemoRecSpectator(Owner).ClientSetRealViewTarget(PRI);
 }
 
 function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {

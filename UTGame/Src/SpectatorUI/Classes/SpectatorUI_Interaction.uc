@@ -252,7 +252,7 @@ function EndPlayerSelect()
     if (SelectionInProgress == SS_InProgress) {
         SelectionInProgress = SS_PostSelect;
     
-        RI.ServerViewPlayer(PRIs[SelectedPRIIndex]);
+        RI.ViewPlayer(PRIs[SelectedPRIIndex]);
         SetTimer(PostPlayerSwitchDelay, false, 'EndPlayerSelect', self);
     } else if (SelectionInProgress == SS_PostSelect) {
         SelectionInProgress = SS_None;
