@@ -20,12 +20,28 @@ replication {
 
 // struct PointsOfInterestContainer "methods"
 
-function AddInterestingActor(Actor A) {
+simulated function AddInterestingActor(Actor A) {
     PointsOfInterest.Actors[PointsOfInterest.Ptr] = A;
     PointsOfInterest.ReadPtr = PointsOfInterest.Ptr;
     if (++PointsOfInterest.Ptr == ArrayCount(PointsOfInterest.Actors)) {
         PointsOfInterest.Ptr = 0;
     }
+}
+
+reliable demorecording function DemoAddInterestingActor(Actor A) {
+    AddInterestingActor(A);
+}   
+
+simulated function Actor GetNextInterestingActor() {
+    local Actor A;
+    local int MinPtr;
+    A = PointsOfInterest.Actors[PointsOfInterest.ReadPtr];
+    MinPtr = PointsOfInterest.Ptr - 1;
+    if (MinPtr < 0) MinPtr = ArrayCount(PointsOfInterest.Actors) - 1; 
+    do {
+        if (--PointsOfInterest.ReadPtr < 0) PointsOfInterest.ReadPtr = ArrayCount(PointsOfInterest.Actors) - 1;
+    } until (PointsOfInterest.ReadPtr == MinPtr || PointsOfInterest.Actors[PointsOfInterest.ReadPtr] != None);
+    return A;
 }
 
 simulated event ReplicatedEvent(name VarName)
@@ -98,8 +114,12 @@ simulated protected function DemoViewPlayer(PlayerReplicationInfo PRI) {
 }
 
 function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {
+    local Actor A;
+
     if (Other.Controller != None && Other.Controller.PlayerReplicationInfo != None) {
-        AddInterestingActor(Other.Controller.PlayerReplicationInfo);
+        A = Other.Controller.PlayerReplicationInfo;
+        AddInterestingActor(A);
+        DemoAddInterestingActor(A); // XXX call it only on DRC-owned RI?
         ClientInterestingPickupTaken(ItemClass, Other.Controller.PlayerReplicationInfo);
     }
 }
@@ -121,17 +141,31 @@ reliable client function ClientInterestingPickupTaken(class<Inventory> What, Pla
     );
 }
 
-reliable server function ServerViewPointOfInterest() {
+simulated function ViewPointOfInterest() {
+    if (DemoRecSpectator(Owner) != None) {
+        DemoViewPointOfInterest();
+    } else {
+        ServerViewPointOfInterest();
+    }
+}
+
+reliable server protected function ServerViewPointOfInterest() {
     local Actor A;
     if (PlayerController(Owner).IsSpectating()) {
-        A = PointsOfInterest.Actors[PointsOfInterest.ReadPtr];
-        if (A == None) return; // empty yet
-
+        A = GetNextInterestingActor();
+        if (A == None) return;
         PlayerController(Owner).SetViewTarget(A); 
+    }
+}
 
-        do {
-            if (--PointsOfInterest.ReadPtr < 0) PointsOfInterest.ReadPtr = ArrayCount(PointsOfInterest.Actors) - 1;
-        } until (PointsOfInterest.ReadPtr == PointsOfInterest.Ptr || PointsOfInterest.Actors[PointsOfInterest.ReadPtr] != None);
+simulated protected function DemoViewPointOfInterest() {
+    local Actor A;
+    A = GetNextInterestingActor();
+    if (A == None) return;
+    if (PlayerReplicationInfo(A) != None) {
+        DemoViewPlayer(PlayerReplicationInfo(A));
+    } else {
+        PlayerController(Owner).SetViewTarget(A); 
     }
 }
 
