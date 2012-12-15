@@ -260,13 +260,26 @@ function EndPlayerSelect()
     }
 }
 
+function string GetPlayerString(PlayerReplicationInfo PRI) {
+    local string s;
+    s = PRI.GetPlayerAlias();
+    if (PRI.bHasFlag) {
+        if (UTOnslaughtGRI(WorldInfo.GRI) != None) {
+            s @= "[ORB]";
+        } else {
+            s @= "[FLAG]";
+        }
+    }
+    return s;
+}
+
 function float GetLongestPlayerListEntry(Canvas C)
 {
     local PlayerReplicationInfo PRI;
     local float XL, YL;
     local float Res;
     foreach PRIs(PRI) {
-        C.StrLen(SelectedPrefix $ PRI.GetPlayerAlias() $ " [FLAG]", XL, YL);
+        C.StrLen(GetPlayerString(PRI), XL, YL);
         if (XL > Res) Res = XL;
     }
     return Res;
@@ -276,10 +289,10 @@ function RenderPlayerList(Canvas C)
 {
     local UTHUD HUD;
     local PlayerReplicationInfo PRI;
-    local string s;
     local int Index;
     local LinearColor LC;
     local float XL, YL;
+    local vector2d POS;
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
     
@@ -288,9 +301,12 @@ function RenderPlayerList(Canvas C)
 
     C.StrLen(SelectedPrefix, XL, YL);
     
+    POS = HUD.ResolveHudPosition(HUD.ClockPosition, 0, 0);
+    POS.x += 28 * HUD.ResolutionScale;
+
     C.SetOrigin(0.0, C.ClipY / 6);
-    C.ClipX = GetLongestPlayerListEntry(C) + 2.0;
-    
+    C.ClipX = GetLongestPlayerListEntry(C) + 2 * POS.x;
+
     C.SetPos(0.0, 0.0);
     C.SetDrawColor(0, 0, 0, 100);
     C.DrawRect(C.ClipX, YL * PRIs.Length);
@@ -317,19 +333,11 @@ function RenderPlayerList(Canvas C)
             C.DrawColor = class'Canvas'.default.DrawColor;
         }
         if (Index == SelectedPRIIndex) {
-            C.SetPos(0.0, Index * YL);
+            C.SetPos(POS.x - XL, Index * YL);
             C.DrawTextClipped(SelectedPrefix);
         }
-        C.SetPos(0.0 + XL, Index * YL);
-        s = PRI.GetPlayerAlias();
-        if (PRI.bHasFlag) {
-            if (UTOnslaughtGRI(WorldInfo.GRI) != None) {
-                s @= "[ORB]";
-            } else {
-                s @= "[FLAG]";
-            }
-        }
-        C.DrawTextClipped(s); 
+        C.SetPos(POS.x, Index * YL);
+        C.DrawTextClipped(GetPlayerString(PRI)); 
     }
 }
 
