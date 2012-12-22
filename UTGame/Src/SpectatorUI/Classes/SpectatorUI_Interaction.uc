@@ -28,6 +28,9 @@ var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
 var array<Name> BookmarkKeys;
 
+// the index we saw spectate button
+var transient int LastMidGameMenuButtonBarSpectateIndex;
+
 static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
     local SpectatorUI_Interaction SUI_Interaction;
@@ -51,8 +54,14 @@ static final function bool SameDirection(vector a, vector b) {
 }
 
 function bool ShouldRender() {
-    // XXX change to IsInState('Spectating')?
-    return IsSpectating();
+    // the same condition appears in UTHUD::DrawGameHud
+    return PlayerReplicationInfo != None && (PlayerReplicationInfo.bOnlySpectator || IsInState('Spectating'));
+}
+
+event Tick(float DeltaTime) {
+    super.Tick(DeltaTime);
+
+    ModifyMidgameMenu();
 }
 
 event PostRender(Canvas Canvas) {
@@ -86,6 +95,48 @@ event PostRender(Canvas Canvas) {
     if (SelectionInProgress != SS_None) {
         RenderPlayerList(Canvas);
     }
+}
+
+
+function UTUIScene_MidGameMenu GetCurrentMidgameMenu() {
+    local UTGameReplicationInfo UTGRI;
+    UTGRI = UTGameReplicationInfo(WorldInfo.GRI);
+    if (UTGRI != None) {
+        return UTGRI.CurrentMidGameMenu;
+    }
+    return None;
+}
+
+function ModifyMidgameMenu() {
+    local UTUIScene_MidGameMenu MGM;
+    local delegate<UIObject.OnClicked> Delegate_;
+
+    MGM = GetCurrentMidgameMenu();
+    if (MGM == None) return;
+
+    // note that it's absolutely necessary to use static function
+    // otherwise game crashes will occur due to leakage of World reference
+    Delegate_ = class.static.ButtonBarSpectate;
+
+    if (PlayerReplicationInfo != None && !PlayerReplicationInfo.bOnlySpectator) {
+        if (LastMidGameMenuButtonBarSpectateIndex == INDEX_NONE || MGM.ButtonBar.Buttons[LastMidGameMenuButtonBarSpectateIndex].OnClicked != Delegate_) {
+            LastMidGameMenuButtonBarSpectateIndex = MGM.ButtonBar.AppendButton("<Strings:UTGameUI.ButtonCallouts.SpectateServer>", Delegate_);
+        }
+    }
+}
+
+static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerIndex) {
+    local LocalPlayer LP;
+    local PlayerController PC;
+    
+    LP = InButton.GetPlayerOwner(InPlayerIndex);
+    if (LP != None) {
+        PC = LP.Actor;
+        if (PC != None) {
+            PC.ConsoleCommand("open" @ PC.GetServerNetworkAddress() $ "?spectatoronly=1");
+        }
+    }
+    return true;
 }
 
 static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
@@ -364,6 +415,7 @@ function BookmarkButtonPressed(Name Key)
 defaultproperties
 {
     OnReceivedNativeInputKey=HandleInputKey
+    LastMidGameMenuButtonBarSpectateIndex=-1
 
     PlayerSwitchDelay=0.5
     PostPlayerSwitchDelay=2.0

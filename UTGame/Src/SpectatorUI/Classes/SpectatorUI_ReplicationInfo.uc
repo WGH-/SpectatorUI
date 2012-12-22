@@ -115,6 +115,10 @@ simulated protected function DemoViewPlayer(PlayerReplicationInfo PRI) {
 
 function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {
     local Actor A;
+    local PlayerReplicationInfo PRI;
+
+    PRI = Controller(Owner).PlayerReplicationInfo;
+    if (PRI == None || (!PRI.bOnlySpectator && !Owner.IsInState('Spectating'))) return;
 
     if (Other.Controller != None && Other.Controller.PlayerReplicationInfo != None) {
         A = Other.Controller.PlayerReplicationInfo;
