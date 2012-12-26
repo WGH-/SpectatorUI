@@ -31,6 +31,9 @@ var array<Name> BookmarkKeys;
 // the index we saw spectate button
 var transient int LastMidGameMenuButtonBarSpectateIndex;
 
+var UIScene ShortManualRef; // reference to the scene containing short manual
+var bool bShortManualShown;
+
 static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
     local SpectatorUI_Interaction SUI_Interaction;
@@ -74,6 +77,11 @@ event PostRender(Canvas Canvas) {
 
     HUD = UTHUD(myHUD);
     if (HUD == None || !ShouldRender()) return;
+
+    if (!bShortManualShown) {
+        OpenManual();
+        bShortManualShown = true;
+    }
 
     Canvas.Font = HUD.GetFontSizeIndex(0);
     
@@ -245,6 +253,11 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                         ServerViewSelf();
                         return true;
                     }
+                } else if (BindString == "GBA_Fire") {
+                    if (ShortManualRef != None) {
+                        CloseManual();
+                        return true;
+                    }
                 }
             }
         } else if (EventType == IE_Released) {
@@ -408,6 +421,29 @@ function BookmarkButtonPressed(Name Key)
             SetRotation(B.Rotation);
         } else {
             ClientMessage("Bookmark" @ Key @ "is not set. Press" @ BookmarkModifierButton $ "+" $ Key @ "to set it.");
+        }
+    }
+}
+
+function OpenManual() {
+    local GameUISceneClient SC;
+    local UIScene UIS;
+    
+    SC = class'UIRoot'.static.GetSceneClient();
+    if (SC != None) {
+        UIS = UIScene(DynamicLoadObject(class.GetPackageName() $ ".SpectatorUI_Content.ShortManual", class'UIScene'));
+        if (UIS != None && SC.OpenScene(UIS)) {
+            ShortManualRef = UIS;
+        }
+    }
+}
+
+function CloseManual() {
+    local GameUISceneClient SC;
+    SC = class'UIRoot'.static.GetSceneClient();
+    if (SC != None) {
+        if (SC.CloseScene(ShortManualRef)) {
+            ShortManualRef = None;
         }
     }
 }
