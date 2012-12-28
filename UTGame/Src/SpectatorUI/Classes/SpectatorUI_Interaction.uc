@@ -432,9 +432,20 @@ function OpenManual() {
     SC = class'UIRoot'.static.GetSceneClient();
     if (SC != None) {
         UIS = UIScene(DynamicLoadObject(class.GetPackageName() $ ".SpectatorUI_Content.ShortManual", class'UIScene'));
+        UIS.OnSceneActivated = static.OnShortManualActivated;
         if (UIS != None && SC.OpenScene(UIS)) {
             ShortManualRef = UIS;
         }
+    }
+}
+
+static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
+    if (bInitialActivation) {
+        UILabel(UIS.FindChild('ManualLabel', true)).SetValue(
+            "Number row - camera speed (exponential)\n" $
+            "Alt + Keypad number - save bookmark (camera position)\n" $
+            "Keypad number - load bookmark\n" 
+        );
     }
 }
 
