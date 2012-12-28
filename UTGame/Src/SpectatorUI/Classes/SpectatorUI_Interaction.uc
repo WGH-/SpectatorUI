@@ -443,7 +443,7 @@ static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
     if (bInitialActivation) {
         UILabel(UIS.FindChild('ManualLabel', true)).SetValue(
             "Number row - camera speed (exponential)\n" $
-            "Alt + Keypad number - save bookmark (camera position)\n" $
+            "Left Alt + Keypad number - save bookmark (camera position)\n" $
             "Keypad number - load bookmark\n" 
         );
     }
