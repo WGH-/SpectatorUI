@@ -24,6 +24,22 @@ function NotifyLogin(Controller NewPlayer) {
     super.NotifyLogin(NewPlayer);
 }
 
+function NotifyLogout(Controller Exiting) {
+    local int i;
+    local SpectatorUI_ReplicationInfo RI;
+
+    while (i < RIs.Length) {
+        RI = RIs[i];
+        if (RI.Owner == Exiting || RI.Owner == None) {
+            RI.Destroy();
+            RIs.Remove(i, 1);
+        } else {
+            i++;
+        }
+    }
+    super.NotifyLogout(Exiting);
+}
+
 // called by SpectatorUI_GameRules
 function NotifyInventoryPickup(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {
     local class<Inventory> klass;
