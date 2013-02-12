@@ -173,6 +173,55 @@ simulated protected function DemoViewPointOfInterest() {
     }
 }
 
+reliable server function ServerSpectate() {
+    local PlayerController PC;
+    local PlayerReplicationInfo PRI;
+    local GameInfo G;
+
+    PC = PlayerController(Owner);
+    if (PC == None) return;
+    PRI = PC.PlayerReplicationInfo;
+    if (PRI == None) return;
+
+    G = WorldInfo.Game;
+
+    if (!PRI.bOnlySpectator &&
+        G.NumSpectators < G.MaxSpectators &&
+        G.GameReplicationInfo.bMatchHasBegun &&
+        !PC.IsInState('RoundEnded') &&
+        (G.BaseMutator == None || G.BaseMutator.AllowBecomeSpectator(PC))
+        )
+    {
+        PRI.bOnlySpectator = true;
+        PRI.bIsSpectator = true;
+
+        if (PC.Pawn != None) {
+            PC.Pawn.Suicide();
+        }
+
+        PC.GotoState('Spectating');
+        PC.ServerViewNextPlayer();
+
+        if (PRI.Team != None) {
+            PRI.Team.RemoveFromTeam(PC);
+            PRI.Team = None;
+        }
+
+        if (G.BaseMutator != None) {
+            G.BaseMutator.NotifyBecomeSpectator(PC);
+        }
+
+        if (UTGame(G) != None && UTGame(G).VoteCollector != None && UTPlayerController(PC) != None) {
+            UTGame(G).VoteCollector.NotifyBecomeSpectator(UTPlayerController(PC));
+        }
+
+        G.NumPlayers--;
+        G.NumSpectators++;
+
+        G.UpdateGameSettingsCounts();
+    }
+}
+
 defaultproperties
 {
     bOnlyRelevantToOwner=true

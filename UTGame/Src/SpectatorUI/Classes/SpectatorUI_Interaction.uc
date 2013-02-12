@@ -136,15 +136,21 @@ function ModifyMidgameMenu() {
 static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerIndex) {
     local LocalPlayer LP;
     local PlayerController PC;
+    local SpectatorUI_Interaction SUI;
     
     LP = InButton.GetPlayerOwner(InPlayerIndex);
     if (LP != None) {
         PC = LP.Actor;
         if (PC != None) {
-            PC.ConsoleCommand("open" @ PC.GetServerNetworkAddress() $ "?spectatoronly=1");
+            SUI = MaybeSpawnFor(PC); // this function doubles as "find"
+            SUI.Spectate();
         }
     }
     return true;
+}
+
+function Spectate() {
+    RI.ServerSpectate();
 }
 
 static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
