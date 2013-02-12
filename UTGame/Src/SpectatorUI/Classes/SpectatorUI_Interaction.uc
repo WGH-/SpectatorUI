@@ -137,6 +137,7 @@ static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerInde
     local LocalPlayer LP;
     local PlayerController PC;
     local SpectatorUI_Interaction SUI;
+    local UIScene UIS;
     
     LP = InButton.GetPlayerOwner(InPlayerIndex);
     if (LP != None) {
@@ -144,6 +145,9 @@ static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerInde
         if (PC != None) {
             SUI = MaybeSpawnFor(PC); // this function doubles as "find"
             SUI.Spectate();
+
+            UIS = UIObject(InButton).GetScene();
+            UIS.SceneClient.CloseScene(UIS);
         }
     }
     return true;
