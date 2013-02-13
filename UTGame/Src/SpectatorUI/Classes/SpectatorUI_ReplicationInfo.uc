@@ -221,6 +221,8 @@ reliable server function ServerSpectate() {
         G.UpdateGameSettingsCounts();
 
         G.BroadcastLocalizedMessage(G.GameMessageClass, 14, PRI);
+    } else {
+        PC.ReceiveLocalizedMessage(G.GameMessageClass, 12);
     }
 }
 
