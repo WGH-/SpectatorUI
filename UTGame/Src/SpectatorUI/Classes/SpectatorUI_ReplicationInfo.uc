@@ -219,6 +219,8 @@ reliable server function ServerSpectate() {
         G.NumSpectators++;
 
         G.UpdateGameSettingsCounts();
+
+        G.BroadcastLocalizedMessage(G.GameMessageClass, 14, PRI);
     }
 }
 
