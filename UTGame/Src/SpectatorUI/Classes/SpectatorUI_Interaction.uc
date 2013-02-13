@@ -58,7 +58,7 @@ static final function bool SameDirection(vector a, vector b) {
 
 function bool ShouldRender() {
     // the same condition appears in UTHUD::DrawGameHud
-    return PlayerReplicationInfo != None && (PlayerReplicationInfo.bOnlySpectator || IsInState('Spectating'));
+    return PlayerReplicationInfo != None && (PlayerReplicationInfo.bOnlySpectator || Outer.IsInState('Spectating'));
 }
 
 event Tick(float DeltaTime) {
