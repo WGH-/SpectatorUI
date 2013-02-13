@@ -236,43 +236,45 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
     local vector Loc;
     local rotator Rot;
 
-    if (ShouldRender() && LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
-        if (EventType ==  IE_Pressed) {
-            i = SpeedBinds.Find('Key', Key);
-            if (i != INDEX_NONE) {
-                bRun = Speeds[SpeedBinds[i].Value];
-            } else if (key == BookmarkModifierButton) {
-                BookmarkModifierButtonHeld = true;
-            } else if (Key == 'Multiply') {
-                RI.ViewPointOfInterest();
-            } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
-                BookmarkButtonPressed(Key); 
-            } else {
-                BindString = PlayerInput.GetBind(Key);
-                if (BindString == "GBA_NextWeapon") {
-                    PlayerSelect(+1);
-                    return true;
-                } else if (BindString == "GBA_PrevWeapon") {
-                    PlayerSelect(-1);
-                    return true;
-                } else if (BindString == "GBA_AltFire") {
-                    if (AnimatedCamera(PlayerCamera) == None) {
-                        GetPlayerViewPoint(Loc, Rot);
-                        SetLocation(Loc);
-                        SetRotation(Rot);
-                        ServerViewSelf();
+    if (LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
+        if (ShouldRender()) {
+            if (EventType == IE_Pressed) {
+                i = SpeedBinds.Find('Key', Key);
+                if (i != INDEX_NONE) {
+                    bRun = Speeds[SpeedBinds[i].Value];
+                } else if (key == BookmarkModifierButton) {
+                    BookmarkModifierButtonHeld = true;
+                } else if (Key == 'Multiply') {
+                    RI.ViewPointOfInterest();
+                } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
+                    BookmarkButtonPressed(Key); 
+                } else {
+                    BindString = PlayerInput.GetBind(Key);
+                    if (BindString == "GBA_NextWeapon") {
+                        PlayerSelect(+1);
                         return true;
-                    }
-                } else if (BindString == "GBA_Fire") {
-                    if (ShortManualRef != None) {
-                        CloseManual();
+                    } else if (BindString == "GBA_PrevWeapon") {
+                        PlayerSelect(-1);
                         return true;
+                    } else if (BindString == "GBA_AltFire") {
+                        if (AnimatedCamera(PlayerCamera) == None) {
+                            GetPlayerViewPoint(Loc, Rot);
+                            SetLocation(Loc);
+                            SetRotation(Rot);
+                            ServerViewSelf();
+                            return true;
+                        }
+                    } else if (BindString == "GBA_Fire") {
+                        if (ShortManualRef != None) {
+                            CloseManual();
+                            return true;
+                        }
                     }
                 }
-            }
-        } else if (EventType == IE_Released) {
-            if (key == BookmarkModifierButton) {
-                BookmarkModifierButtonHeld = false;
+            } else if (EventType == IE_Released) {
+                if (key == BookmarkModifierButton) {
+                    BookmarkModifierButtonHeld = false;
+                }
             }
         }
     }
