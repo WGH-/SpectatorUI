@@ -74,6 +74,10 @@ simulated event PostBeginPlay() {
 
     if (Role == ROLE_Authority) {
         Owner_ = Owner;
+
+        if (LocalPlayer(PlayerController(Owner).Player) != None) {
+            TryAttachInteraction();
+        }
     }
 }
 
