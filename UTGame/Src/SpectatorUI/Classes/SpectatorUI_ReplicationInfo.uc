@@ -108,7 +108,7 @@ simulated function ViewPlayer(PlayerReplicationInfo PRI) {
 }
 
 reliable server protected function ServerViewPlayer(PlayerReplicationInfo PRI) {
-    if (PlayerController(Owner).IsSpectating()) {
+    if (WorldInfo.Game.CanSpectate(PlayerController(Owner), PRI)) {
         PlayerController(Owner).SetViewTarget(PRI); 
     }
 }
@@ -122,7 +122,7 @@ function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pi
     local PlayerReplicationInfo PRI;
 
     PRI = Controller(Owner).PlayerReplicationInfo;
-    if (PRI == None || (!PRI.bOnlySpectator && !Owner.IsInState('Spectating'))) return;
+    if (!(PRI != None && PRI.bOnlySpectator)) return;
 
     if (Other.Controller != None && Other.Controller.PlayerReplicationInfo != None) {
         A = Other.Controller.PlayerReplicationInfo;
