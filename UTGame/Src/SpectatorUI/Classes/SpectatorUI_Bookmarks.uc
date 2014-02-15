@@ -6,6 +6,7 @@ struct BookmarkStruct {
     var Name Name;
     var Vector Location;
     var Rotator Rotation;
+    var float FOV;
 };
 
 var protected config array<BookmarkStruct> Bookmarks;

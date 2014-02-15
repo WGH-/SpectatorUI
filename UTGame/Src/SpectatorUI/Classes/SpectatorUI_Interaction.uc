@@ -24,6 +24,7 @@ var config float PostPlayerSwitchDelay;
 var string SelectedPrefix;
 
 var config Name BookmarkModifierButton;
+var config Name ZoomButton;
 var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
 var array<Name> BookmarkKeys;
@@ -33,6 +34,8 @@ var transient int LastMidGameMenuButtonBarSpectateIndex;
 
 var UIScene ShortManualRef; // reference to the scene containing short manual
 var bool bShortManualShown;
+
+var transient bool bZoomButtonHeld;
 
 static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     local Interaction Interaction;
@@ -102,6 +105,9 @@ event PostRender(Canvas Canvas) {
     }
     if (SelectionInProgress != SS_None) {
         RenderPlayerList(Canvas);
+    }
+    if (bZoomButtonHeld) {
+        RenderZoomUI(Canvas);
     }
 }
 
@@ -236,6 +242,8 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
     local vector Loc;
     local rotator Rot;
 
+    // TODO I don't remember why it's sometimes 'return true', and sometimes it's not
+
     if (LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
         if (ShouldRender()) {
             if (EventType == IE_Pressed) {
@@ -244,6 +252,9 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     bRun = Speeds[SpeedBinds[i].Value];
                 } else if (key == BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = true;
+                } else if (key == ZoomButton) {
+                    bZoomButtonHeld = true; 
+                    return true;
                 } else if (Key == 'Multiply') {
                     RI.ViewPointOfInterest();
                 } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
@@ -274,9 +285,25 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
             } else if (EventType == IE_Released) {
                 if (key == BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = false;
+                } else if (key == ZoomButton) {
+                    bZoomButtonHeld = false;
+                    return true;
                 }
             }
         }
+    }
+    return false;
+}
+
+function bool HandleInptAxis(int ControllerId, name Key, float Delta, float DeltaTime, optional bool bGaypad)
+{
+    if (bZoomButtonHeld) {
+        if (Key == 'MouseY') {
+            SetFOV(
+                FClamp(FOVAngle - 4 * Delta * DeltaTime, 1, 160)
+            );
+        }
+        return true;
     }
     return false;
 }
@@ -377,8 +404,9 @@ function RenderPlayerList(Canvas C)
 
     C.StrLen(SelectedPrefix, XL, YL);
     
+    // XXX why clock? to be honest, I forgot
     POS = HUD.ResolveHudPosition(HUD.ClockPosition, 0, 0);
-    POS.x += 28 * HUD.ResolutionScale;
+    POS.x += 28 * HUD.ResolutionScale; // XXX magic constant = bad
 
     C.SetOrigin(0.0, C.ClipY / 6);
     C.ClipX = GetLongestPlayerListEntry(C) + 2 * POS.x;
@@ -417,6 +445,28 @@ function RenderPlayerList(Canvas C)
     }
 }
 
+function RenderZoomUI(Canvas C)
+{
+    local vector2d POS;
+    local UTHUD HUD;
+
+    HUD = UTHUD(myHUD);
+    if (HUD == None) return;
+
+    C.Reset();
+    C.Font = HUD.GetFontSizeIndex(1);
+
+    POS = HUD.ResolveHudPosition(HUD.ClockPosition, 0, 0);
+    POS.x += 10 * HUD.ResolutionScale; // XXX another magic constant
+
+    // XXX another set of random values
+    C.SetOrigin(0.0, C.ClipY / 5);
+    
+    C.SetDrawColor(0, 255, 0);
+    C.SetPos(POS.x, POS.y);
+    C.DrawTextClipped("FOV:" @ Round(FOVAngle) @ "degrees");
+}
+
 function BookmarkButtonPressed(Name Key)
 {
     local SpectatorUI_Bookmarks.BookmarkStruct B;
@@ -425,12 +475,14 @@ function BookmarkButtonPressed(Name Key)
     if (BookmarkModifierButtonHeld) {
         B.Location = Location;
         B.Rotation = Rotation;
+        B.FOV = FOVAngle;
         Bookmarks.SaveBookmark(B);
     } else {
         if (Bookmarks.LoadBookmark(B)) {
             ServerViewSelf();
             SetLocation(B.Location);
             SetRotation(B.Rotation);
+            SetFOV(B.FOV);
         } else {
             ClientMessage("Bookmark" @ Key @ "is not set. Press" @ BookmarkModifierButton $ "+" $ Key @ "to set it.");
         }
@@ -474,6 +526,7 @@ function CloseManual() {
 defaultproperties
 {
     OnReceivedNativeInputKey=HandleInputKey
+    OnReceivedNativeInputAxis=HandleInptAxis
     LastMidGameMenuButtonBarSpectateIndex=-1
 
     PlayerSwitchDelay=0.5
@@ -481,6 +534,7 @@ defaultproperties
     SelectedPrefix=">  "
 
     BookmarkModifierButton=LeftAlt
+    ZoomButton=MiddleMouseButton
 
     SpeedBinds.Add((Key=one,Value=0))
     SpeedBinds.Add((Key=two,Value=1))
