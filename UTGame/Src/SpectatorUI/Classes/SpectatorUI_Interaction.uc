@@ -159,6 +159,10 @@ static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerInde
     return true;
 }
 
+exec function BecomeSpectator() {
+    Spectate();
+}
+
 function Spectate() {
     RI.ServerSpectate();
 }
