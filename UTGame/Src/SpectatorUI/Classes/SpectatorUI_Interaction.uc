@@ -211,24 +211,19 @@ static function UTOnslaughtFlag_PostRenderFor(UTOnslaughtFlag O, PlayerControlle
     O.PostRenderFor(PC, Canvas, Loc, Dir);
 }
 
-exec function SpectatorUI_SetSpeed(int x)
+exec function SpectatorUI_SetSpeed(float speed)
 {
-    bRun = clamp(x - 1, 0, 255);
+    SpectatorCameraSpeed = Speed;
 }
 
-exec function SpectatorUI_AddSpeed(int x)
+exec function SpectatorUI_AddSpeed(float speed)
 {
-    bRun = clamp(bRun + x, 0, 255);
+    SpectatorCameraSpeed += Speed;
 }
 
-exec function SpectatorUI_MultiplySpeed(int x)
+exec function SpectatorUI_MultiplySpeed(float speed)
 {
-    bRun = clamp((1 + bRun << x) - 1, 0, 255);
-}
-
-exec function SpectatorUI_DivideSpeed(int x)
-{
-    bRun = clamp((1 + bRun >> x) - 1, 0, 255);
+    SpectatorCameraSpeed *= Speed;
 }
 
 static final operator(18) float mod(int a, int b)
@@ -237,6 +232,17 @@ static final operator(18) float mod(int a, int b)
     res = a - (a / b) * b;
     if (res < 0) res += b;
     return res;
+}
+
+function float GetCameraSpeedMultiplier(int i) 
+{
+    if (i < 4) {
+        return 1.0 / (5 - i);
+    } else if (i == 4) {
+        return 1.0;
+    } else {
+        return i - 4;
+    }
 }
 
 function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
@@ -253,7 +259,7 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
             if (EventType == IE_Pressed) {
                 i = SpeedBinds.Find('Key', Key);
                 if (i != INDEX_NONE) {
-                    bRun = Speeds[SpeedBinds[i].Value];
+                    SpectatorCameraSpeed = default.SpectatorCameraSpeed * GetCameraSpeedMultiplier(Speeds[SpeedBinds[i].Value]);
                 } else if (key == BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = true;
                 } else if (key == ZoomButton) {
