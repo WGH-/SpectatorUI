@@ -258,6 +258,14 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
 
     if (LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
         if (ShouldRender()) {
+            BindString = PlayerInput.GetBind(Key);
+
+            if (InStr(BindString, "SpectatorUI_") != -1) {
+                // player manually bound this mutator's exec function
+                // let's hope he knows what he's doing
+                return false;
+            }
+    
             if (EventType == IE_Pressed) {
                 i = SpeedBinds.Find('Key', Key);
                 if (i != INDEX_NONE) {
@@ -272,7 +280,6 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                 } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                     BookmarkButtonPressed(Key); 
                 } else {
-                    BindString = PlayerInput.GetBind(Key);
                     if (BindString == "GBA_NextWeapon") {
                         PlayerSelect(+1);
                         return true;
