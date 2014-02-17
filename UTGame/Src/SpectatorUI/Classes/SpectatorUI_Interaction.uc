@@ -81,7 +81,9 @@ event PostRender(Canvas Canvas) {
     HUD = UTHUD(myHUD);
     if (HUD == None || !ShouldRender()) return;
 
-    if (!bShortManualShown) {
+    // even though SpectatorUI works fine with "temporary" spectators
+    // don't show manual unless spectator is totally spectator
+    if (!bShortManualShown && PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator) {
         OpenManual();
         bShortManualShown = true;
     }
