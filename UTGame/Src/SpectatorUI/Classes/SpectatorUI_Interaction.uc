@@ -7,7 +7,6 @@ struct SpectatorUI_SpeedBind {
     var int Value;
 };
 var array<SpectatorUI_SpeedBind> SpeedBinds;
-var int Speeds[10];
 
 var SpectatorUI_ReplicationInfo RI;
 
@@ -184,13 +183,7 @@ static final operator(18) float mod(int a, int b)
 
 function float GetCameraSpeedMultiplier(int i) 
 {
-    if (i < 4) {
-        return 1.0 / (5 - i);
-    } else if (i == 4) {
-        return 1.0;
-    } else {
-        return i - 4;
-    }
+    return 2 ** (i - 4);
 }
 
 function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
@@ -215,7 +208,7 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
             if (EventType == IE_Pressed) {
                 i = SpeedBinds.Find('Key', Key);
                 if (i != INDEX_NONE) {
-                    SpectatorCameraSpeed = default.SpectatorCameraSpeed * GetCameraSpeedMultiplier(Speeds[SpeedBinds[i].Value]);
+                    SpectatorCameraSpeed = default.SpectatorCameraSpeed * GetCameraSpeedMultiplier(SpeedBinds[i].Value);
                 } else if (key == BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = true;
                 } else if (key == ZoomButton) {
@@ -537,15 +530,4 @@ defaultproperties
     BookmarkKeys.Add(NumPadEight)
     BookmarkKeys.Add(NumPadNine)
     BookmarkKeys.Add(NumPadZero)
-
-    Speeds[0] = 0
-    Speeds[1] = 1
-    Speeds[2] = 2
-    Speeds[3] = 4
-    Speeds[4] = 8
-    Speeds[5] = 16
-    Speeds[6] = 32
-    Speeds[7] = 64
-    Speeds[8] = 128
-    Speeds[9] = 255
 }
