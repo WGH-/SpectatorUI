@@ -469,9 +469,10 @@ function OpenManual() {
 static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
     if (bInitialActivation) {
         UILabel(UIS.FindChild('ManualLabel', true)).SetValue(
-            "Number row - camera speed (exponential)\n" $
-            "Left Alt + Keypad number - save bookmark (camera position)\n" $
-            "Keypad number - load bookmark\n" 
+            "Number row - camera speed contorl\n" $
+            "LeftAlt + NumPad0-9 - save bookmark (camera position)\n" $
+            "NumPad0-9 - load bookmark\n" $
+            "Middle mouse button + mouse - zoom (field of view)\n"
         );
     }
 }
