@@ -29,8 +29,7 @@ var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
 var array<Name> BookmarkKeys;
 
-// the index we saw spectate button
-var transient int LastMidGameMenuButtonBarSpectateIndex;
+
 
 var UIScene ShortManualRef; // reference to the scene containing short manual
 var bool bShortManualShown;
@@ -49,9 +48,11 @@ static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
     
     SUI_Interaction = new(PC) default.class;
     SUI_Interaction.Bookmarks = new(None, PC.WorldInfo.GetMapName(true)) class'SpectatorUI_Bookmarks';
-    // have to insert it first so it could intercept
-    // bound keys
+    // have to insert it first so it can intercept bound keys
     PC.Interactions.InsertItem(0, SUI_Interaction);
+
+    PC.Spawn(class'SpectatorUI_MidgameMenuFixer', PC);    
+
     return SUI_Interaction;
 }
 
@@ -62,12 +63,6 @@ static final function bool SameDirection(vector a, vector b) {
 function bool ShouldRender() {
     // the same condition appears in UTHUD::DrawGameHud
     return PlayerReplicationInfo != None && (PlayerReplicationInfo.bOnlySpectator || Outer.IsInState('Spectating'));
-}
-
-event Tick(float DeltaTime) {
-    super.Tick(DeltaTime);
-
-    ModifyMidgameMenu();
 }
 
 event PostRender(Canvas Canvas) {
@@ -112,55 +107,6 @@ event PostRender(Canvas Canvas) {
         RenderZoomUI(Canvas);
     }
 }
-
-
-function UTUIScene_MidGameMenu GetCurrentMidgameMenu() {
-    local UTGameReplicationInfo UTGRI;
-    UTGRI = UTGameReplicationInfo(WorldInfo.GRI);
-    if (UTGRI != None) {
-        return UTGRI.CurrentMidGameMenu;
-    }
-    return None;
-}
-
-function ModifyMidgameMenu() {
-    local UTUIScene_MidGameMenu MGM;
-    local delegate<UIObject.OnClicked> Delegate_;
-
-    MGM = GetCurrentMidgameMenu();
-    if (MGM == None) return;
-
-    // note that it's absolutely necessary to use static function
-    // otherwise game crashes will occur due to leakage of World reference
-    Delegate_ = class.static.ButtonBarSpectate;
-
-    if (PlayerReplicationInfo != None && !PlayerReplicationInfo.bOnlySpectator) {
-        if (LastMidGameMenuButtonBarSpectateIndex == INDEX_NONE || MGM.ButtonBar.Buttons[LastMidGameMenuButtonBarSpectateIndex].OnClicked != Delegate_) {
-            LastMidGameMenuButtonBarSpectateIndex = MGM.ButtonBar.AppendButton("<Strings:UTGameUI.ButtonCallouts.SpectateServer>", Delegate_);
-        }
-    }
-}
-
-static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerIndex) {
-    local LocalPlayer LP;
-    local PlayerController PC;
-    local SpectatorUI_Interaction SUI;
-    local UIScene UIS;
-    
-    LP = InButton.GetPlayerOwner(InPlayerIndex);
-    if (LP != None) {
-        PC = LP.Actor;
-        if (PC != None) {
-            SUI = MaybeSpawnFor(PC); // this function doubles as "find"
-            SUI.Spectate();
-
-            UIS = UIObject(InButton).GetScene();
-            UIS.SceneClient.CloseScene(UIS);
-        }
-    }
-    return true;
-}
-
 exec function BecomeSpectator() {
     Spectate();
 }
@@ -546,7 +492,6 @@ defaultproperties
 {
     OnReceivedNativeInputKey=HandleInputKey
     OnReceivedNativeInputAxis=HandleInptAxis
-    LastMidGameMenuButtonBarSpectateIndex=-1
 
     PlayerSwitchDelay=0.5
     PostPlayerSwitchDelay=2.0
