@@ -1,4 +1,5 @@
-class SpectatorUI_Mut extends UTMutator;
+class SpectatorUI_Mut extends UTMutator
+    config(SpectatorUI);
 
 var array<class<Inventory> > InterestingPickupClasses;
 
@@ -66,4 +67,6 @@ defaultproperties
     InterestingPickupClasses.Add(class'UTUDamage')
     InterestingPickupClasses.Add(class'UTBerserk')
     InterestingPickupClasses.Add(class'UTDeployableShapedCharge')
+
+    bExportMenuData=false
 }
