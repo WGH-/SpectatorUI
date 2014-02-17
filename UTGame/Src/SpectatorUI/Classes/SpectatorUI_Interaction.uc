@@ -275,7 +275,11 @@ function bool HandleInptAxis(int ControllerId, name Key, float Delta, float Delt
 
 function bool IsValidSpectatorTarget(PlayerReplicationInfo PRI)
 {
-    return PRI != None && !PRI.bOnlySpectator;
+    if (PRI == None || PRI.bOnlySpectator) return false;
+    // XXX is it the best way?
+    if (UTDuelPRI(PRI) != None && UTDuelPRI(PRI).QueuePosition >= 0) return false;
+
+    return true;
 }
 
 function PlayerSelect(int increment)
