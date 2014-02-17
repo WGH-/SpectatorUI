@@ -399,7 +399,8 @@ function RenderPlayerList(Canvas C)
                 Clamp(LC.B * 255.0, 0, 255)
             );
         } else {
-            C.DrawColor = class'Canvas'.default.DrawColor;
+            // same color as in UTHUD::DisplayLeaderboard
+            C.SetDrawColor(200, 200, 200, 255);
         }
         if (Index == SelectedPRIIndex) {
             C.SetPos(POS.x - XL, Index * YL);
