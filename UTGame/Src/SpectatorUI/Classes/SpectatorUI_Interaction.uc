@@ -24,6 +24,7 @@ var string SelectedPrefix;
 
 var config Name BookmarkModifierButton;
 var config Name ZoomButton;
+var config name BehindViewKey;
 var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
 var array<Name> BookmarkKeys;
@@ -216,6 +217,9 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     return true;
                 } else if (Key == 'Multiply') {
                     RI.ViewPointOfInterest();
+                } else if (Key == BehindViewKey) {
+                    bForceBehindView = !bForceBehindView;
+                    return true;
                 } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                     BookmarkButtonPressed(Key); 
                 } else {
@@ -472,7 +476,8 @@ static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
             "Number row - camera speed contorl\n" $
             "LeftAlt + NumPad0-9 - save bookmark (camera position)\n" $
             "NumPad0-9 - load bookmark\n" $
-            "Middle mouse button + mouse - zoom (field of view)\n"
+            "Middle mouse button + mouse - zoom (field of view)\n" $
+            "Q - behind view (3rd person camera)\n"
         );
     }
 }
@@ -498,6 +503,7 @@ defaultproperties
 
     BookmarkModifierButton=LeftAlt
     ZoomButton=MiddleMouseButton
+    BehindViewKey=Q
 
     SpeedBinds.Add((Key=one,Value=0))
     SpeedBinds.Add((Key=two,Value=1))
