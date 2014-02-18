@@ -65,8 +65,7 @@ simulated function TryAttachInteraction() {
         SetTimer(0.1, false, 'TryAttachInteraction');
         return;
     }
-    SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PC);
-    SUI.RI = self;
+    SUI = class'SpectatorUI_Interaction'.static.Create(PC, self);
 }
 
 simulated event PostBeginPlay() {
@@ -79,24 +78,6 @@ simulated event PostBeginPlay() {
             TryAttachInteraction();
         }
     }
-}
-
-simulated event Destroyed() {
-    local int i;
-    local PlayerController PC;
-
-    if (WorldInfo.NetMode != NM_DedicatedServer) {
-        PC = PlayerController(Owner);
-
-        for (i = 0; i < PC.Interactions.Length; i++) {
-            if (SpectatorUI_Interaction(PC.Interactions[i]) != None) {
-                PC.Interactions.Remove(i, 1);
-                break;
-            }
-        }
-    }
-
-    super.Destroyed();
 }
 
 simulated function ViewPlayer(PlayerReplicationInfo PRI) {

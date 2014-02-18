@@ -47,7 +47,7 @@ static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerInde
     if (LP != None) {
         PC = UTPlayerController(LP.Actor);
         if (PC != None) {
-            SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PC); // this function doubles as "find"
+            SUI = class'SpectatorUI_Interaction'.static.FindInteraction(PC); 
             SUI.Spectate();
 
             UIS = UIObject(InButton).GetScene();

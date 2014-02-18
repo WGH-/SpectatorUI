@@ -29,31 +29,42 @@ var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
 var array<Name> BookmarkKeys;
 
-
-
 var UIScene ShortManualRef; // reference to the scene containing short manual
 var bool bShortManualShown;
 
 var transient bool bZoomButtonHeld;
 
-static function SpectatorUI_Interaction MaybeSpawnFor(UTPlayerController PC) {
-    local Interaction Interaction;
+static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorUI_ReplicationInfo newRI) {
     local SpectatorUI_Interaction SUI_Interaction;
+    local int i;
 
-    foreach PC.Interactions(Interaction) {
-        if (SpectatorUI_Interaction(Interaction) != None) {
-            return SpectatorUI_Interaction(Interaction);
+    // remove existing one, if it exists
+    // because it's left over from previous map after seamless travel
+    for (i = 0; i < PC.Interactions.length; i++) {
+        if (SpectatorUI_Interaction(PC.Interactions[i]) != None) {
+            PC.Interactions.Remove(i--, 1);
         }
     }
-    
+
     SUI_Interaction = new(PC) default.class;
     SUI_Interaction.Bookmarks = new(None, PC.WorldInfo.GetMapName(true)) class'SpectatorUI_Bookmarks';
+    SUI_Interaction.RI = newRI;
     // have to insert it first so it can intercept bound keys
     PC.Interactions.InsertItem(0, SUI_Interaction);
 
     PC.Spawn(class'SpectatorUI_MidgameMenuFixer', PC);    
 
     return SUI_Interaction;
+}
+
+static function SpectatorUI_Interaction FindInteraction(UTPlayerController PC) {
+    local Interaction Interaction;
+    foreach PC.Interactions(Interaction) {
+        if (SpectatorUI_Interaction(Interaction) != None) {
+            return SpectatorUI_Interaction(Interaction);
+        }
+    }
+    return None;
 }
 
 static final function bool SameDirection(vector a, vector b) {
