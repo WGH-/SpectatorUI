@@ -39,13 +39,13 @@ function ModifyMidgameMenu() {
 
 static function bool ButtonBarSpectate(UIScreenObject InButton, int InPlayerIndex) {
     local LocalPlayer LP;
-    local PlayerController PC;
+    local UTPlayerController PC;
     local SpectatorUI_Interaction SUI;
     local UIScene UIS;
     
     LP = InButton.GetPlayerOwner(InPlayerIndex);
     if (LP != None) {
-        PC = LP.Actor;
+        PC = UTPlayerController(LP.Actor);
         if (PC != None) {
             SUI = class'SpectatorUI_Interaction'.static.MaybeSpawnFor(PC); // this function doubles as "find"
             SUI.Spectate();

@@ -19,7 +19,7 @@ function bool CheckReplacement(Actor Other) {
 }
 
 function NotifyLogin(Controller NewPlayer) {
-    if (PlayerController(NewPlayer) != None) { // skip e.g. bots
+    if (UTPlayerController(NewPlayer) != None) { // skip e.g. bots
         RIs.AddItem(Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer));
     }
     super.NotifyLogin(NewPlayer);

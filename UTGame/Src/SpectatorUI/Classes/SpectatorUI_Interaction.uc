@@ -1,5 +1,5 @@
 class SpectatorUI_Interaction extends Interaction 
-    within PlayerController
+    within UTPlayerController
     config(SpectatorUI);
 
 struct SpectatorUI_SpeedBind {
@@ -35,7 +35,7 @@ var bool bShortManualShown;
 
 var transient bool bZoomButtonHeld;
 
-static function SpectatorUI_Interaction MaybeSpawnFor(PlayerController PC) {
+static function SpectatorUI_Interaction MaybeSpawnFor(UTPlayerController PC) {
     local Interaction Interaction;
     local SpectatorUI_Interaction SUI_Interaction;
 

@@ -57,8 +57,8 @@ simulated event ReplicatedEvent(name VarName)
 }
 
 simulated function TryAttachInteraction() {
-    local PlayerController PC;
-    PC = PlayerController(Owner);
+    local UTPlayerController PC;
+    PC = UTPlayerController(Owner);
     
     if (PC.Player == None) {
         // hack: don't do that unless PC has player
