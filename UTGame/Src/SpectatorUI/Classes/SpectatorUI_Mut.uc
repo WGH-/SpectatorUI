@@ -4,11 +4,21 @@ class SpectatorUI_Mut extends UTMutator
 var array<class<Inventory> > InterestingPickupClasses;
 
 var array<SpectatorUI_ReplicationInfo> RIs;
+var array<PickupFactory> WatchedPickupFactories;
 
-function InitMutator(string Options, out string ErrorMessage) {
-    class'SpectatorUI_GameRules'.static.AddRulesTo(WorldInfo.Game, self);    
+//function InitMutator(string Options, out string ErrorMessage) {
+//    super.InitMutator(Options, ErrorMessage);
+//}
 
-    super.InitMutator(Options, ErrorMessage);
+function PostBeginPlay() {
+    super.PostBeginPlay();
+
+    if (bDeleteMe) return;
+
+    // delay until the next tick for two reasons:
+    // 1. until AllNavigationPoints becomes avaiable
+    // 2. to give other mutators chance to disable pickups, if they wish so
+    SetTimer(0.001, false, 'AttachSequenceObjectsToPickups');
 }
 
 function bool CheckReplacement(Actor Other) {
@@ -41,32 +51,127 @@ function NotifyLogout(Controller Exiting) {
     super.NotifyLogout(Exiting);
 }
 
-// called by SpectatorUI_GameRules
-function NotifyInventoryPickup(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {
-    local class<Inventory> klass;
-    local bool bInteresting;
+function NotifyBecomeSpectator(PlayerController PC) {
     local SpectatorUI_ReplicationInfo RI;
+    
+    super.NotifyBecomeSpectator(PC);
 
-    foreach InterestingPickupClasses(klass) {
-        if (ClassIsChildOf(ItemClass, klass)) {
-            bInteresting = true;
+    // push respawn time update
+    foreach RIs(RI) {
+        if (RI.Owner == PC) {
+            UpdateAllRespawnTimesFor(RI); 
             break;
         }
     }
 
-    if (bInteresting) {
+}
+
+function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
+    local SpectatorUI_ReplicationInfo RI;
+
+    if (EventInstigator != None) {
+        // taken
         foreach RIs(RI) {
-            RI.InterestingPickupTaken(Other, ItemClass, Pickup);
+            RI.InterestingPickupTaken(EventInstigator, F, None);
         }
+        UpdateRespawnTime(F);
+    } else {
+        // available   
+    }
+}
+
+function UpdateAllRespawnTimesFor(SpectatorUI_ReplicationInfo RI) {
+    local int i;
+    local PickupFactory F;
+
+    foreach WatchedPickupFactories(F, i) {
+        UpdateRespawnTime(F, i, RI);
+    }
+}
+
+function UpdateRespawnTime(
+    PickupFactory F, 
+    optional int i = INDEX_NONE, 
+    optional SpectatorUI_ReplicationInfo RI = None
+) 
+{
+    local float EstimatedRespawnTime;
+
+    EstimatedRespawnTime = WorldInfo.GRI.ElapsedTime + F.GetRespawnTime() / WorldInfo.TimeDilation;
+    
+    if (i == INDEX_NONE) {
+        i = WatchedPickupFactories.Find(F);
+    }
+
+    if (i == INDEX_NONE) {
+        `warn("Tried to update respawn time of unregistered factory");
+        return;
+    }
+    
+    if (RI == None) {
+        foreach RIs(RI) {
+            RI.UpdateRespawnTime(F, i, EstimatedRespawnTime);
+        }
+    } else {
+        RI.UpdateRespawnTime(F, i, EstimatedRespawnTime);
+    }
+}
+
+static function ModifyParentSequence(SequenceObject Seq, SequenceObject NewParent) {
+    // this function is a basis of terrible hack
+    // ParentSequence is a const member
+    // so in order to assign to it, I modify UnrealScript bytecode after compilation
+    // in such way so this assignment's operands are swapped
+    NewParent = Seq.ParentSequence;
+}
+
+function bool IsPickupFactoryInteresting(UTPickupFactory F) {
+    local bool bBigGameType;
+
+    // if it's enabled by means of kismet,
+    // there's no defined respawn timer
+    if (F.IsInState('SleepInfinite')) return false;
+
+    if (F.bIsDisabled) return false;
+    if (F.bIsSuperItem) return true;
+
+    bBigGameType = UTOnslaughtGame(WorldInfo.Game) != None || UTVehicleCTFGame(WorldInfo.Game) != None;
+
+    if (!bBigGameType && UTArmorPickupFactory(F) != None) {
+        return true;
+    }
+
+    return false;
+}
+
+function AttachSequenceObjectsToPickups() {
+    local UTPickupFactory Factory;
+    local SeqEvent_PickupStatusChange_Delegate PSC;
+    local Sequence FakeParent;
+    
+    `log("Attaching sequence objects to pickup factories...");
+    
+    FakeParent = WorldInfo.GetGameSequence();
+    
+    foreach WorldInfo.AllNavigationPoints(class'UTPickupFactory', Factory) {
+        if (!IsPickupFactoryInteresting(Factory)) continue;
+
+        PSC = new(None) class'SeqEvent_PickupStatusChange_Delegate';
+        PSC.Originator = Factory;
+        PSC.OnActivated = OnPickupStatusChange;
+        ModifyParentSequence(PSC, FakeParent);
+        Factory.GeneratedEvents.AddItem(PSC);
+        
+        WatchedPickupFactories.AddItem(Factory);
+
+        // push update to existing spectators, though it's unlikely there are any
+        UpdateRespawnTime(Factory, WatchedPickupFactories.Length - 1);
+
+        `log("Attached" @ PSC @ "to" @ Factory);
     }
 }
 
 defaultproperties
 {
-    InterestingPickupClasses.Add(class'UTWeap_Redeemer')
-    InterestingPickupClasses.Add(class'UTUDamage')
-    InterestingPickupClasses.Add(class'UTBerserk')
-    InterestingPickupClasses.Add(class'UTDeployableShapedCharge')
-
     bExportMenuData=false
 }

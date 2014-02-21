@@ -98,7 +98,40 @@ simulated protected function DemoViewPlayer(PlayerReplicationInfo PRI) {
     DemoRecSpectator(Owner).ClientSetRealViewTarget(PRI);
 }
 
-function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pickup) {
+// extract human-readable pickup name on the client
+simulated function string GetPickupName(class<Actor> Clazz) {
+    local class<UTItemPickupFactory> IPFClass;
+    local class<Inventory> InvClass;
+
+    IPFClass = class<UTItemPickupFactory>(Clazz);
+
+    if (IPFClass != None) {
+        return IPFClass.default.PickupMessage;
+    }
+    InvClass = class<Inventory>(Clazz);
+    if (InvClass != None) {
+        if (InvClass.default.ItemName != "") {
+            return InvClass.default.ItemName;
+        }
+        return InvClass.default.PickupMessage;
+    }
+    return string(Clazz.name);
+}
+
+// the points is, we want to resolve names on the client
+// because they may use different language than server
+// in order to do so, we send an Inventory class (not instance!)
+// but in case of item pickups (armor, health), there is no Inventory class
+// so we send a class of Factory instead (it contains PickupMessage property)
+function class<Actor> GetPickupClass(PickupFactory F) {
+    if (UTItemPickupFactory(F) != None) {
+        return F.class;
+    } else {
+        return F.InventoryType;
+    }
+}
+
+function InterestingPickupTaken(Pawn Other, PickupFactory F, Actor Pickup) {
     local Actor A;
     local PlayerReplicationInfo PRI;
 
@@ -109,25 +142,32 @@ function InterestingPickupTaken(Pawn Other, class<Inventory> ItemClass, Actor Pi
         A = Other.Controller.PlayerReplicationInfo;
         AddInterestingActor(A);
         DemoAddInterestingActor(A); // XXX call it only on DRC-owned RI?
-        ClientInterestingPickupTaken(ItemClass, Other.Controller.PlayerReplicationInfo);
+        ClientInterestingPickupTaken(GetPickupClass(F), Other.Controller.PlayerReplicationInfo);
     }
 }
 
-reliable client function ClientInterestingPickupTaken(class<Inventory> What, PlayerReplicationInfo Who) {
+reliable client function ClientInterestingPickupTaken(class<Actor> What, PlayerReplicationInfo Who) {
     local string Desc;
 
-    Desc = What.default.ItemName;
-    if (Desc == "") {
-        Desc = What.default.PickupMessage;
-    }
-    if (Desc == "") {
-        Desc = string(What.name);
-    }
+    Desc = GetPickupName(What); 
     
     PlayerController(Owner).ClientMessage(
         Desc @ "has been picked up by" @ Who.GetPlayerAlias() $ "." $
         " Press * to jump to that player."
     );
+}
+
+function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime) {
+    local PlayerReplicationInfo PRI;
+
+    PRI = Controller(Owner).PlayerReplicationInfo;
+    if (!(PRI != None && PRI.bOnlySpectator)) return;
+
+    ClientUpdateRespawnTime(GetPickupClass(F), i, ExpectedTime);
+}
+
+reliable client function ClientUpdateRespawnTime(class<Actor> Clazz, int i, float ExpectedTime) {
+    SUI.UpdateRespawnTime(GetPickupName(Clazz), i, ExpectedTime);
 }
 
 simulated function ViewPointOfInterest() {

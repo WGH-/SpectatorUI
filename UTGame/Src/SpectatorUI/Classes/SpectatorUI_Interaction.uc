@@ -34,6 +34,14 @@ var bool bShortManualShown;
 
 var transient bool bZoomButtonHeld;
 
+// pickup respawn timers
+struct SpectatorUI_RespawnTimer {
+    var string PickupName;
+    var float EstimatedRespawnTime;
+};
+var array<SpectatorUI_RespawnTimer> RespawnTimers;
+
+
 static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorUI_ReplicationInfo newRI) {
     local SpectatorUI_Interaction SUI_Interaction;
     local int i;
@@ -117,6 +125,8 @@ event PostRender(Canvas Canvas) {
     if (bZoomButtonHeld) {
         RenderZoomUI(Canvas);
     }
+    
+    RenderPickupTimers(Canvas);
 }
 exec function BecomeSpectator() {
     Spectate();
@@ -430,6 +440,24 @@ function RenderPlayerList(Canvas C)
     }
 }
 
+function RenderPickupTimers(Canvas C)
+{
+    local UTHUD HUD;
+    local int i;
+    local int SecondsLeft;
+
+    HUD = UTHUD(myHUD);
+    if (HUD == None) return;
+
+    C.Reset();
+    C.Font = HUD.GetFontSizeIndex(0);
+
+    for (i = 0; i < RespawnTimers.Length; i++) {
+        SecondsLeft = Max(0, RespawnTimers[i].EstimatedRespawnTime - WorldInfo.GRI.ElapsedTime);
+        C.DrawText(RespawnTimers[i].PickupName @ SecondsLeft);
+    }
+}
+
 function RenderZoomUI(Canvas C)
 {
     local vector2d POS;
@@ -508,6 +536,16 @@ function CloseManual() {
             ShortManualRef = None;
         }
     }
+}
+
+function UpdateRespawnTime(string PickupName, int i, float ExpectedTime) {
+    while (RespawnTimers.Length - 1 < i) {
+        RespawnTimers.Length = RespawnTimers.Length + 1;
+        RespawnTimers[RespawnTimers.Length - 1].EstimatedRespawnTime = -1;
+    }
+
+    RespawnTimers[i].PickupName = PickupName;
+    RespawnTimers[i].EstimatedRespawnTime = ExpectedTime;
 }
 
 defaultproperties
