@@ -29,8 +29,12 @@ function bool CheckReplacement(Actor Other) {
 }
 
 function NotifyLogin(Controller NewPlayer) {
+    local SpectatorUI_ReplicationInfo RI;
+
     if (UTPlayerController(NewPlayer) != None) { // skip e.g. bots
-        RIs.AddItem(Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer));
+        RI = Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer);
+        RIs.AddItem(RI);
+        UpdateAllRespawnTimesFor(RI);
     }
     super.NotifyLogin(NewPlayer);
 }
@@ -63,7 +67,6 @@ function NotifyBecomeSpectator(PlayerController PC) {
             break;
         }
     }
-
 }
 
 function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
