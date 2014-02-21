@@ -48,7 +48,7 @@ simulated event ReplicatedEvent(name VarName)
 {
     super.ReplicatedEvent(VarName);
 
-    if (VarName == 'Owner_') {
+    if (VarName == 'Owner_' && Owner == None) {
         SetOwner(Owner_);
         if (WorldInfo.NetMode != NM_DedicatedServer && PlayerController(Owner) != None) {
             TryAttachInteraction();
@@ -65,7 +65,10 @@ simulated function TryAttachInteraction() {
         SetTimer(0.1, false, 'TryAttachInteraction');
         return;
     }
-    SUI = class'SpectatorUI_Interaction'.static.Create(PC, self);
+    // the check should never pass, but let's be safe
+    if (SUI == None) {
+        SUI = class'SpectatorUI_Interaction'.static.Create(PC, self);
+    }
 }
 
 simulated event PostBeginPlay() {
