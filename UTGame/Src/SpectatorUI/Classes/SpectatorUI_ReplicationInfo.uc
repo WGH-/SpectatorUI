@@ -4,6 +4,8 @@ var repnotify Actor Owner_;
 
 // set only on clients
 var SpectatorUI_Interaction SUI;
+var float ServerTimeDelta;
+var float ServerTimeSeconds;
 
 // set only on server
 struct PointsOfInterestContainer {
@@ -12,6 +14,8 @@ struct PointsOfInterestContainer {
     var int ReadPtr;
 };
 var PointsOfInterestContainer PointsOfInterest;
+var bool bIsSpectator;
+var SpectatorUI_Mut Mut;
 
 replication {
     if (bNetOwner && bNetDirty)
@@ -76,11 +80,50 @@ simulated event PostBeginPlay() {
 
     if (Role == ROLE_Authority) {
         Owner_ = Owner;
-
-        if (LocalPlayer(PlayerController(Owner).Player) != None) {
-            TryAttachInteraction();
-        }
     }
+}
+
+function NotifyBecomeSpectator() {
+    bIsSpectator = true;
+
+    if (LocalPlayer(PlayerController(Owner).Player) != None) {
+        ServerTimeDelta = 0; // it's always zero for local players
+        TryAttachInteraction();
+    } else {
+        TryReplicateTimeDelta();
+    }
+
+    Mut.UpdateAllRespawnTimesFor(self);
+}
+
+function NotifyBecomeActive() {
+    bIsSpectator = false;
+
+    // clear timer, in case it's active
+    ClearTimer('TryReplicateTimeDelta');
+}
+
+function TryReplicateTimeDelta() {
+    //`log("Trying to replicate server time" @ WorldInfo.TimeSeconds);
+    ClientReplicateTimeDelta(WorldInfo.TimeSeconds);
+    // 16  = 4 (PRI.Ping is stored in byte divided by 4) * 4 (let's give more than enough time to answer)
+    SetTimer(FMax(0.5, 0.25 + (16 * PlayerController(Owner).PlayerReplicationInfo.Ping) * 0.001) * WorldInfo.TimeDilation, false, 'TryReplicateTimeDelta');
+}
+
+unreliable client function ClientReplicateTimeDelta(float TimeSeconds) {
+    if (TimeSeconds < ServerTimeSeconds) {
+        // old packet received out of order
+        // just ignore
+    } else {
+        ServerTimeSeconds = TimeSeconds;
+        ServerTimeDelta = WorldInfo.TimeSeconds - ServerTimeSeconds;
+    }
+    AcknowledgeReplicateTimeDelta(TimeSeconds);
+}
+
+unreliable server function AcknowledgeReplicateTimeDelta(float TimeSeconds) {
+    //`log("replication acknowledged, RTT" @ WorldInfo.TimeSeconds - TimeSeconds);
+    ClearTimer('TryReplicateTimeDelta');
 }
 
 simulated function ViewPlayer(PlayerReplicationInfo PRI) {
@@ -139,6 +182,7 @@ function InterestingPickupTaken(Pawn Other, PickupFactory F, Actor Pickup) {
     local PlayerReplicationInfo PRI;
 
     PRI = Controller(Owner).PlayerReplicationInfo;
+    // XXX again, what about duel players in queue?
     if (!(PRI != None && PRI.bOnlySpectator)) return;
 
     if (Other.Controller != None && Other.Controller.PlayerReplicationInfo != None) {
@@ -164,6 +208,7 @@ function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime) {
     local PlayerReplicationInfo PRI;
 
     PRI = Controller(Owner).PlayerReplicationInfo;
+    // XXX again, what about duel players in queue?
     if (!(PRI != None && PRI.bOnlySpectator)) return;
 
     ClientUpdateRespawnTime(GetPickupClass(F), i, ExpectedTime);
@@ -183,6 +228,8 @@ simulated function ViewPointOfInterest() {
 
 reliable server protected function ServerViewPointOfInterest() {
     local Actor A;
+    // XXX IsSpectating isn't really appopriate, as it includes
+    // end game camera, which is technically spectating, but doesn't move freely
     if (PlayerController(Owner).IsSpectating()) {
         A = GetNextInterestingActor();
         if (A == None) return;
@@ -223,6 +270,8 @@ reliable server function ServerSpectate() {
         PRI.bOnlySpectator = true;
         PRI.bIsSpectator = true;
 
+        // XXX duel fix
+
         if (PC.Pawn != None) {
             PC.Pawn.Suicide();
         }
@@ -257,4 +306,5 @@ reliable server function ServerSpectate() {
 defaultproperties
 {
     bOnlyRelevantToOwner=true
+    bAlwaysTick=True
 }

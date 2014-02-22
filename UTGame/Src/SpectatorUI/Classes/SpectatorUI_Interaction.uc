@@ -453,7 +453,8 @@ function RenderPickupTimers(Canvas C)
     C.Font = HUD.GetFontSizeIndex(0);
 
     for (i = 0; i < RespawnTimers.Length; i++) {
-        SecondsLeft = Max(0, RespawnTimers[i].EstimatedRespawnTime - WorldInfo.GRI.ElapsedTime);
+        // add 1.0 because I want it to respawn when timer hits exactly zero
+        SecondsLeft = Max(0, RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta) + 1.0);
         C.DrawText(RespawnTimers[i].PickupName @ SecondsLeft);
     }
 }
@@ -543,6 +544,8 @@ function UpdateRespawnTime(string PickupName, int i, float ExpectedTime) {
         RespawnTimers.Length = RespawnTimers.Length + 1;
         RespawnTimers[RespawnTimers.Length - 1].EstimatedRespawnTime = -1;
     }
+
+    //`log("Updated pickup timer" @ PickupName @ ExpectedTime);
 
     RespawnTimers[i].PickupName = PickupName;
     RespawnTimers[i].EstimatedRespawnTime = ExpectedTime;

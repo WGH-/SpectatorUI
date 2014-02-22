@@ -33,7 +33,16 @@ function NotifyLogin(Controller NewPlayer) {
 
     if (UTPlayerController(NewPlayer) != None) { // skip e.g. bots
         RI = Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer);
+        RI.Mut = self;
         RIs.AddItem(RI);
+        
+        // XXX what about duel players going to queue?
+        if (NewPlayer.PlayerReplicationInfo.bOnlySpectator) {
+            RI.NotifyBecomeSpectator();
+        } else {
+            RI.NotifyBecomeActive();
+        }
+
         UpdateAllRespawnTimesFor(RI);
     }
     super.NotifyLogin(NewPlayer);
@@ -56,17 +65,41 @@ function NotifyLogout(Controller Exiting) {
 }
 
 function NotifyBecomeSpectator(PlayerController PC) {
+    // XXX what about duel players going to queue?
+
     local SpectatorUI_ReplicationInfo RI;
     
     super.NotifyBecomeSpectator(PC);
 
-    // push respawn time update
     foreach RIs(RI) {
         if (RI.Owner == PC) {
-            UpdateAllRespawnTimesFor(RI); 
+            RI.NotifyBecomeSpectator();
             break;
         }
     }
+}
+
+function NotifyBecomeActivePlayer(PlayerController PC) {
+    local SpectatorUI_ReplicationInfo RI;
+
+    super.NotifyBecomeActivePlayer(PC);
+
+    foreach RIs(RI) {
+        if (RI.Owner == PC) {
+            RI.NotifyBecomeActive();
+            break;
+        }
+    }
+}
+
+function Reset() {
+    super.Reset();
+    SetTimer(0.001, false, 'UpdateAllRespawnTimesForEveryone');
+}
+
+function MatchStarting() {
+    super.MatchStarting();
+    SetTimer(0.001, false, 'UpdateAllRespawnTimesForEveryone');
 }
 
 function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
@@ -77,9 +110,16 @@ function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
         foreach RIs(RI) {
             RI.InterestingPickupTaken(EventInstigator, F, None);
         }
-        UpdateRespawnTime(F);
+        UpdateRespawnTime(F, , , true);
     } else {
         // available   
+    }
+}
+
+function UpdateAllRespawnTimesForEveryone() {
+    local SpectatorUI_ReplicationInfo RI;
+    foreach RIs(RI) {
+        UpdateAllRespawnTimesFor(RI);
     }
 }
 
@@ -92,15 +132,33 @@ function UpdateAllRespawnTimesFor(SpectatorUI_ReplicationInfo RI) {
     }
 }
 
+
+
 function UpdateRespawnTime(
     PickupFactory F, 
     optional int i = INDEX_NONE, 
-    optional SpectatorUI_ReplicationInfo RI = None
+    optional SpectatorUI_ReplicationInfo RI = None,
+    optional bool bJustPickedUp = false
 ) 
 {
     local float EstimatedRespawnTime;
+    local UTPickupFactory UTPF;
 
-    EstimatedRespawnTime = WorldInfo.GRI.ElapsedTime + F.GetRespawnTime() / WorldInfo.TimeDilation;
+    if (F.IsInState('WaitingForMatch')) {
+        EstimatedRespawnTime = -1;
+    } else {
+        if (bJustPickedUp) {
+            EstimatedRespawnTime += F.GetRespawnTime();
+        } else {
+            EstimatedRespawnTime += F.LatentFloat;
+
+            UTPF = UTPickupFactory(F);
+            if (UTPF != None && !UTPF.bIsRespawning) {
+                EstimatedRespawnTime += F.RespawnEffectTime;
+            }
+        } 
+        EstimatedRespawnTime += WorldInfo.TimeSeconds;
+    }
     
     if (i == INDEX_NONE) {
         i = WatchedPickupFactories.Find(F);
