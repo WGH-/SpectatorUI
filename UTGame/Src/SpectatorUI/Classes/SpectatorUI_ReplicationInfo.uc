@@ -64,11 +64,6 @@ simulated function TryAttachInteraction() {
     local UTPlayerController PC;
     PC = UTPlayerController(Owner);
     
-    if (PC.Player == None) {
-        // hack: don't do that unless PC has player
-        SetTimer(0.1, false, 'TryAttachInteraction');
-        return;
-    }
     // the check should never pass, but let's be safe
     if (SUI == None) {
         SUI = class'SpectatorUI_Interaction'.static.Create(PC, self);
@@ -81,14 +76,16 @@ simulated event PostBeginPlay() {
     if (Role == ROLE_Authority) {
         Owner_ = Owner;
     }
+    if (PlayerController(Owner).IsLocalPlayerController()) {
+        TryAttachInteraction();
+    }
 }
 
 function NotifyBecomeSpectator() {
     bIsSpectator = true;
 
-    if (LocalPlayer(PlayerController(Owner).Player) != None) {
+    if (PlayerController(Owner).IsLocalPlayerController()) {
         ServerTimeDelta = 0; // it's always zero for local players
-        TryAttachInteraction();
     } else {
         TryReplicateTimeDelta();
     }
