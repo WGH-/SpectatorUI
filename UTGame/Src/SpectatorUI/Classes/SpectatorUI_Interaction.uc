@@ -119,14 +119,16 @@ event PostRender(Canvas Canvas) {
             UTOnslaughtFlag_PostRenderFor(UTOnslaughtFlag(A), Outer, Canvas, Loc, Dir);
         }
     }
+    RenderPickupTimers(Canvas);
+
     if (SelectionInProgress != SS_None) {
         RenderPlayerList(Canvas);
     }
+
     if (bZoomButtonHeld) {
         RenderZoomUI(Canvas);
     }
     
-    RenderPickupTimers(Canvas);
 }
 exec function BecomeSpectator() {
     Spectate();
@@ -406,7 +408,7 @@ function RenderPlayerList(Canvas C)
     C.ClipX = GetLongestPlayerListEntry(C) + 2 * POS.x;
 
     C.SetPos(0.0, 0.0);
-    C.SetDrawColor(0, 0, 0, 100);
+    C.SetDrawColor(0, 0, 0, 150);
     C.DrawRect(C.ClipX, YL * PRIs.Length);
 
     foreach PRIs(PRI, Index) {
@@ -445,17 +447,25 @@ function RenderPickupTimers(Canvas C)
     local UTHUD HUD;
     local int i;
     local int SecondsLeft;
+    local string s;
+    local float XL, YL;
 
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
 
     C.Reset();
     C.Font = HUD.GetFontSizeIndex(0);
+    C.DrawColor = HUD.GoldColor;
+
+    C.SetOrigin(14.0, C.ClipY / 8);
 
     for (i = 0; i < RespawnTimers.Length; i++) {
         // add 1.0 because I want it to respawn when timer hits exactly zero
         SecondsLeft = (RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta)) / WorldInfo.TimeDilation + 1.0;
-        C.DrawText(RespawnTimers[i].PickupName $ " - " $ SecondsLeft <= 0 ? "Available" : string(SecondsLeft));
+        s = RespawnTimers[i].PickupName $ " - " $ SecondsLeft <= 0 ? "Available" : string(SecondsLeft);
+        C.TextSize(S, XL, YL);
+        C.DrawTextClipped(s);
+        C.CurY += YL;
     }
 }
 
