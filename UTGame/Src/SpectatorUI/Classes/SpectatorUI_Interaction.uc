@@ -216,8 +216,9 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
     local string BindString;
     local vector Loc;
     local rotator Rot;
-
-    // TODO I don't remember why it's sometimes 'return true', and sometimes it's not
+    
+    // true is returned when I totally want to override something
+    // like builtin view target switching
 
     if (LocalPlayer(Player) != None && LocalPlayer(Player).ControllerId == ControllerId) {
         if (ShouldRender()) {
@@ -237,12 +238,10 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     BookmarkModifierButtonHeld = true;
                 } else if (key == ZoomButton) {
                     bZoomButtonHeld = true; 
-                    return true;
                 } else if (Key == 'Multiply') {
                     RI.ViewPointOfInterest();
                 } else if (Key == BehindViewKey) {
                     bForceBehindView = !bForceBehindView;
-                    return true;
                 } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                     BookmarkButtonPressed(Key); 
                 } else {
@@ -272,6 +271,7 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                             CloseManual();
                             return true;
                         }
+                        // otherwise, let ViewObjective handle it
                     }
                 }
             } else if (EventType == IE_Released) {
@@ -279,7 +279,6 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     BookmarkModifierButtonHeld = false;
                 } else if (key == ZoomButton) {
                     bZoomButtonHeld = false;
-                    return true;
                 }
             }
         }
@@ -303,7 +302,7 @@ function bool HandleInptAxis(int ControllerId, name Key, float Delta, float Delt
 function bool IsValidSpectatorTarget(PlayerReplicationInfo PRI)
 {
     if (PRI == None || PRI.bOnlySpectator) return false;
-    // XXX is it the best way?
+    // special duel handling
     if (UTDuelPRI(PRI) != None && UTDuelPRI(PRI).QueuePosition >= 0) return false;
 
     return true;

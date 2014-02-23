@@ -14,7 +14,6 @@ struct PointsOfInterestContainer {
     var int ReadPtr;
 };
 var PointsOfInterestContainer PointsOfInterest;
-var bool bIsSpectator;
 var SpectatorUI_Mut Mut;
 
 replication {
@@ -84,8 +83,6 @@ simulated event PostBeginPlay() {
 }
 
 function NotifyBecomeSpectator() {
-    bIsSpectator = true;
-
     if (PlayerController(Owner).IsLocalPlayerController()) {
         ServerTimeDelta = 0; // it's always zero for local players
     } else {
@@ -96,8 +93,6 @@ function NotifyBecomeSpectator() {
 }
 
 function NotifyBecomeActive() {
-    bIsSpectator = false;
-
     // clear timer, in case it's active
     ClearTimer('TryReplicateTimeDelta');
 }
@@ -178,11 +173,10 @@ function class<Actor> GetPickupClass(PickupFactory F) {
 
 function InterestingPickupTaken(Pawn Other, PickupFactory F, Actor Pickup) {
     local Actor A;
-    local PlayerReplicationInfo PRI;
-
-    PRI = Controller(Owner).PlayerReplicationInfo;
-    // XXX again, what about duel players in queue?
-    if (!(PRI != None && PRI.bOnlySpectator)) return;
+    
+    // important check
+    // BaseSpectating shouldn't pass here
+    if (!Owner.IsInState('Spectating')) return;
 
     if (Other.Controller != None && Other.Controller.PlayerReplicationInfo != None) {
         A = Other.Controller.PlayerReplicationInfo;
@@ -204,11 +198,8 @@ reliable client function ClientInterestingPickupTaken(class<Actor> What, PlayerR
 }
 
 function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime) {
-    local PlayerReplicationInfo PRI;
-
-    PRI = Controller(Owner).PlayerReplicationInfo;
-    // XXX again, what about duel players in queue?
-    if (!(PRI != None && PRI.bOnlySpectator)) return;
+    // important check, again
+    if (!Owner.IsInState('Spectating')) return;
 
     ClientUpdateRespawnTime(GetPickupClass(F), i, ExpectedTime);
 }
@@ -227,9 +218,7 @@ simulated function ViewPointOfInterest() {
 
 reliable server protected function ServerViewPointOfInterest() {
     local Actor A;
-    // XXX IsSpectating isn't really appopriate, as it includes
-    // end game camera, which is technically spectating, but doesn't move freely
-    if (PlayerController(Owner).IsSpectating()) {
+    if (Owner.IsInState('BaseSpectating')) {
         A = GetNextInterestingActor();
         if (A == None) return;
         PlayerController(Owner).SetViewTarget(A); 
@@ -256,8 +245,6 @@ function DuelSpectate(UTDuelGame G) {
     local PlayerController Exiting;
 
     Exiting = PlayerController(Owner);
-
-    `log("DuelSpectate");
 
     Index = G.Queue.Find(UTDuelPRI(Exiting.PlayerReplicationInfo));
     if (Index != INDEX_NONE)

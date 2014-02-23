@@ -117,10 +117,7 @@ function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
 }
 
 function UpdateAllRespawnTimesForEveryone() {
-    local SpectatorUI_ReplicationInfo RI;
-    foreach RIs(RI) {
-        UpdateAllRespawnTimesFor(RI);
-    }
+    UpdateAllRespawnTimesFor(None);
 }
 
 function UpdateAllRespawnTimesFor(SpectatorUI_ReplicationInfo RI) {
@@ -131,8 +128,6 @@ function UpdateAllRespawnTimesFor(SpectatorUI_ReplicationInfo RI) {
         UpdateRespawnTime(F, i, RI);
     }
 }
-
-
 
 function UpdateRespawnTime(
     PickupFactory F, 
