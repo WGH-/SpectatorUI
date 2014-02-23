@@ -254,13 +254,13 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                         if (AnimatedCamera(PlayerCamera) == None) {
                             GetPlayerViewPoint(Loc, Rot);
                             Rot.Roll = 0; // we don't really want dutch angle, do we?
-                            SetLocation(Loc);
-                            SetRotation(Rot);
+                            
                             ServerViewSelf();
-                            // in standalone games, right mouse detaches camera where it is anyway
-                            // and, for some reason, camera ignores SetRotation if it's called before ViewSelf
-                            // so call it again
-                            // although it's not needed in other game modes, it doesn't hurt anyway
+
+                            // set position after ServerViewSelf because:
+                            // 1. on clients, it doesn't make any difference, as call is asynchronous
+                            // 2. on authority, ServerViewSelf sets position immediately,
+                            //    and thus ignores Roll set to zero
                             SetLocation(Loc);
                             SetRotation(Rot);
                             return true;

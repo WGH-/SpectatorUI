@@ -274,7 +274,7 @@ reliable server function ServerSpectate() {
         }
 
         PC.GotoState('Spectating');
-        PC.ServerViewNextPlayer();
+        PC.ServerViewSelf();
 
         if (PRI.Team != None) {
             PRI.Team.RemoveFromTeam(PC);
