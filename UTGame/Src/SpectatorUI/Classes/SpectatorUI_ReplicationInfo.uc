@@ -15,9 +15,10 @@ struct PointsOfInterestContainer {
 };
 var PointsOfInterestContainer PointsOfInterest;
 var SpectatorUI_Mut Mut;
+var bool bTimeReplicated;
 
 replication {
-    if (bNetOwner && bNetDirty)
+    if (bNetInitial)
         Owner_;
 }
 
@@ -74,6 +75,7 @@ simulated event PostBeginPlay() {
 
     if (Role == ROLE_Authority) {
         if (PlayerController(Owner).IsLocalPlayerController()) {
+            ServerTimeDelta = 0; // it's always zero for local players
             TryAttachInteraction();
         } else {
             Owner_ = Owner;
@@ -98,6 +100,10 @@ function NotifyBecomeActive() {
 }
 
 function TryReplicateTimeDelta() {
+    if (IsTimerActive('TryReplicateTimeDelta') || bTimeReplicated) {
+        return;
+    }
+
     //`log("Trying to replicate server time" @ WorldInfo.TimeSeconds);
     ClientReplicateTimeDelta(WorldInfo.TimeSeconds);
     // 16  = 4 (PRI.Ping is stored in byte divided by 4) * 4 (let's give more than enough time to answer)
@@ -118,6 +124,7 @@ unreliable client function ClientReplicateTimeDelta(float TimeSeconds) {
 unreliable server function AcknowledgeReplicateTimeDelta(float TimeSeconds) {
     //`log("replication acknowledged, RTT" @ WorldInfo.TimeSeconds - TimeSeconds);
     ClearTimer('TryReplicateTimeDelta');
+    bTimeReplicated = true;
 }
 
 simulated function ViewPlayer(PlayerReplicationInfo PRI) {
@@ -200,7 +207,8 @@ reliable client function ClientInterestingPickupTaken(class<Actor> What, PlayerR
 function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime) {
     // important check, again
     if (!Owner.IsInState('Spectating')) return;
-
+    
+    TryReplicateTimeDelta();
     ClientUpdateRespawnTime(GetPickupClass(F), i, ExpectedTime);
 }
 
