@@ -454,8 +454,8 @@ function RenderPickupTimers(Canvas C)
 
     for (i = 0; i < RespawnTimers.Length; i++) {
         // add 1.0 because I want it to respawn when timer hits exactly zero
-        SecondsLeft = Max(0, RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta) + 1.0);
-        C.DrawText(RespawnTimers[i].PickupName @ SecondsLeft);
+        SecondsLeft = (RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta)) / WorldInfo.TimeDilation + 1.0;
+        C.DrawText(RespawnTimers[i].PickupName $ " - " $ SecondsLeft <= 0 ? "Available" : string(SecondsLeft));
     }
 }
 
