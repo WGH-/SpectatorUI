@@ -54,7 +54,7 @@ simulated event ReplicatedEvent(name VarName)
 
     if (VarName == 'Owner_' && Owner == None) {
         SetOwner(Owner_);
-        if (WorldInfo.NetMode != NM_DedicatedServer && PlayerController(Owner) != None) {
+        if (WorldInfo.NetMode != NM_DedicatedServer) {
             TryAttachInteraction();
         }
     }
@@ -74,10 +74,12 @@ simulated event PostBeginPlay() {
     super.PostBeginPlay(); 
 
     if (Role == ROLE_Authority) {
-        Owner_ = Owner;
-    }
-    if (PlayerController(Owner).IsLocalPlayerController()) {
-        TryAttachInteraction();
+        if (PlayerController(Owner).IsLocalPlayerController()) {
+            TryAttachInteraction();
+        } else {
+            Owner_ = Owner;
+            // and continue from ReplicatedEvent
+        }
     }
 }
 
