@@ -245,6 +245,73 @@ simulated protected function DemoViewPointOfInterest() {
     }
 }
 
+function DuelSpectate(UTDuelGame G) {
+    local int Index;
+    local Controller C;
+    local UTPlayerController Host;
+    local PlayerReplicationInfo Winner;
+    local bool HostExiting;
+    local PlayerController Exiting;
+
+    Exiting = PlayerController(Owner);
+
+    `log("DuelSpectate");
+
+    Index = G.Queue.Find(UTDuelPRI(Exiting.PlayerReplicationInfo));
+    if (Index != INDEX_NONE)
+    {
+        // if player is in queue, just remove him from there
+        G.Queue.Remove(Index, 1);
+        G.UpdateQueuePositions();
+    } else if (
+        (!G.bRotateQueueEachKill || !G.GameReplicationInfo.bMatchHasBegun || WorldInfo.IsInSeamlessTravel()) &&
+        Exiting.PlayerReplicationInfo != None && 
+        Exiting.PlayerReplicationInfo.Team != None &&
+        Exiting.PlayerReplicationInfo.Team.Size == 1 
+    )
+    {
+        // if he's in game...
+
+        if (!G.GameReplicationInfo.bMatchHasBegun || WorldInfo.IsInSeamlessTravel())
+        {
+            if (G.Queue.length > 0)
+            {
+                // just add a new player now
+                G.GetPlayerFromQueue();
+            }
+        }
+        else if (!G.bGameEnded)
+        {
+            foreach WorldInfo.AllControllers(class'Controller', C)
+            {
+                if (C != Exiting && 
+                    C.bIsPlayer && 
+                    (UTDuelPRI(C.PlayerReplicationInfo) != None) && 
+                    (UTDuelPRI(C.PlayerReplicationInfo).QueuePosition < 0)
+                )
+                {
+                    Winner = C.PlayerReplicationInfo;
+                    break;
+                }
+            }
+            HostExiting = false;
+            foreach LocalPlayerControllers(class'UTPlayerController', Host)
+            {
+                // see if the host is exiting
+                if (Host == Exiting )
+                {
+                    HostExiting = true;
+                }
+            }
+            // if it's not the host that's leaving
+            if (!HostExiting)
+            {
+                G.EndGame(Winner, "LastMan");
+            }
+        }
+    }
+}
+
 reliable server function ServerSpectate() {
     local PlayerController PC;
     local PlayerReplicationInfo PRI;
@@ -264,10 +331,12 @@ reliable server function ServerSpectate() {
         (G.BaseMutator == None || G.BaseMutator.AllowBecomeSpectator(PC))
         )
     {
+        if (UTDuelGame(G) != None) {
+            DuelSpectate(UTDuelGame(G));
+        }
+
         PRI.bOnlySpectator = true;
         PRI.bIsSpectator = true;
-
-        // XXX duel fix
 
         if (PC.Pawn != None) {
             PC.Pawn.Suicide();
