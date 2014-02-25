@@ -38,6 +38,7 @@ var transient bool bZoomButtonHeld;
 struct SpectatorUI_RespawnTimer {
     var string PickupName;
     var float EstimatedRespawnTime;
+    var PickupFactory PickupFactory;
 };
 var array<SpectatorUI_RespawnTimer> RespawnTimers;
 
@@ -449,13 +450,22 @@ function RenderPickupTimers(Canvas C)
     local int SecondsLeft;
     local string s;
     local float XL, YL;
+    local color VisibleColor, HiddenColor;
+    local LocalPlayer LP;
 
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
 
+    LP = LocalPlayer(Player);
+
+    VisibleColor = HUD.GoldColor;
+    HiddenColor.R = VisibleColor.R / 2;
+    HiddenColor.G = VisibleColor.G / 2;
+    HiddenColor.B = VisibleColor.B / 2;
+    HiddenColor.A = VisibleColor.A;
+
     C.Reset();
     C.Font = HUD.GetFontSizeIndex(0);
-    C.DrawColor = HUD.GoldColor;
 
     C.SetOrigin(14.0, C.ClipY / 8);
 
@@ -463,6 +473,12 @@ function RenderPickupTimers(Canvas C)
         if (RespawnTimers[i].EstimatedRespawnTime < 0) {
             // disabled, inactive, or something like that
             continue;
+        }
+
+        if (LP.GetActorVisibility(RespawnTimers[i].PickupFactory)) {
+            C.DrawColor = VisibleColor;
+        } else {
+            C.DrawColor = HiddenColor;
         }
     
         // add 1.0 because I want it to respawn when timer hits exactly zero
@@ -557,7 +573,7 @@ function CloseManual() {
     }
 }
 
-function UpdateRespawnTime(string PickupName, int i, float ExpectedTime) {
+function UpdateRespawnTime(PickupFactory F, string PickupName, int i, float ExpectedTime) {
     while (RespawnTimers.Length - 1 < i) {
         RespawnTimers.Length = RespawnTimers.Length + 1;
         RespawnTimers[RespawnTimers.Length - 1].EstimatedRespawnTime = -1;
@@ -565,6 +581,7 @@ function UpdateRespawnTime(string PickupName, int i, float ExpectedTime) {
 
     //`log("Updated pickup timer" @ PickupName @ ExpectedTime);
 
+    RespawnTimers[i].PickupFactory = F;
     RespawnTimers[i].PickupName = PickupName;
     RespawnTimers[i].EstimatedRespawnTime = ExpectedTime;
 }

@@ -189,11 +189,11 @@ function InterestingPickupTaken(Pawn Other, PickupFactory F, Actor Pickup) {
         A = Other.Controller.PlayerReplicationInfo;
         AddInterestingActor(A);
         DemoAddInterestingActor(A); // XXX call it only on DRC-owned RI?
-        ClientInterestingPickupTaken(GetPickupClass(F), Other.Controller.PlayerReplicationInfo);
+        ClientInterestingPickupTaken(F, GetPickupClass(F), Other.Controller.PlayerReplicationInfo);
     }
 }
 
-reliable client function ClientInterestingPickupTaken(class<Actor> What, PlayerReplicationInfo Who) {
+reliable client function ClientInterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplicationInfo Who) {
     local string Desc;
 
     Desc = GetPickupName(What); 
@@ -209,11 +209,11 @@ function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime) {
     if (!Owner.IsInState('Spectating')) return;
     
     TryReplicateTimeDelta();
-    ClientUpdateRespawnTime(GetPickupClass(F), i, ExpectedTime);
+    ClientUpdateRespawnTime(F, GetPickupClass(F), i, ExpectedTime);
 }
 
-reliable client function ClientUpdateRespawnTime(class<Actor> Clazz, int i, float ExpectedTime) {
-    SUI.UpdateRespawnTime(GetPickupName(Clazz), i, ExpectedTime);
+reliable client function ClientUpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float ExpectedTime) {
+    SUI.UpdateRespawnTime(F, GetPickupName(Clazz), i, ExpectedTime);
 }
 
 simulated function ViewPointOfInterest() {
