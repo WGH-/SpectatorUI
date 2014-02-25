@@ -217,6 +217,9 @@ function bool IsPickupFactoryInteresting(UTPickupFactory F) {
 
     if (F.bIsDisabled) return false;
     if (F.bIsSuperItem) return true;
+    
+    // all powerups - DD, berserk, jump boots, etc. - are interesting
+    if (UTPowerupPickupFactory(F) != None) return true;
 
     bBigGameType = UTOnslaughtGame(WorldInfo.Game) != None || UTVehicleCTFGame(WorldInfo.Game) != None;
 
