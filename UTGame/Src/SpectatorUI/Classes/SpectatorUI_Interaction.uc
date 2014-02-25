@@ -98,8 +98,9 @@ event PostRender(Canvas Canvas) {
     // even though SpectatorUI works fine with "temporary" spectators
     // don't show manual unless spectator is totally spectator
     if (!bShortManualShown && PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator) {
-        OpenManual();
-        bShortManualShown = true;
+        if (OpenManual()) {
+            bShortManualShown = true;
+        }
     }
 
     Canvas.Font = HUD.GetFontSizeIndex(0);
@@ -512,18 +513,21 @@ function BookmarkButtonPressed(Name Key)
     }
 }
 
-function OpenManual() {
+function bool OpenManual() {
     local GameUISceneClient SC;
     local UIScene UIS;
     
     SC = class'UIRoot'.static.GetSceneClient();
-    if (SC != None) {
+    if (SC != None && !SC.IsUIActive(0x00000020)) {
         UIS = UIScene(DynamicLoadObject(class.GetPackageName() $ ".SpectatorUI_Content.ShortManual", class'UIScene'));
         UIS.OnSceneActivated = static.OnShortManualActivated;
         if (UIS != None && SC.OpenScene(UIS)) {
             ShortManualRef = UIS;
+            return true;
         }
     }
+
+    return false;
 }
 
 static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
