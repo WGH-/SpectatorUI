@@ -460,6 +460,11 @@ function RenderPickupTimers(Canvas C)
     C.SetOrigin(14.0, C.ClipY / 8);
 
     for (i = 0; i < RespawnTimers.Length; i++) {
+        if (RespawnTimers[i].EstimatedRespawnTime < 0) {
+            // disabled, inactive, or something like that
+            continue;
+        }
+    
         // add 1.0 because I want it to respawn when timer hits exactly zero
         SecondsLeft = (RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta)) / WorldInfo.TimeDilation + 1.0;
         s = RespawnTimers[i].PickupName $ " - " $ SecondsLeft <= 0 ? "Available" : string(SecondsLeft);

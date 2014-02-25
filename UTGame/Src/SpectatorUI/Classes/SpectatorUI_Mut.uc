@@ -6,6 +6,8 @@ var array<class<Inventory> > InterestingPickupClasses;
 var array<SpectatorUI_ReplicationInfo> RIs;
 var array<PickupFactory> WatchedPickupFactories;
 
+var int TicksToWait;
+
 //function InitMutator(string Options, out string ErrorMessage) {
 //    super.InitMutator(Options, ErrorMessage);
 //}
@@ -92,14 +94,29 @@ function NotifyBecomeActivePlayer(PlayerController PC) {
     }
 }
 
+function DelayedUpdateRespawnTimesForEveryone(int Ticks) {
+    TicksToWait = Ticks;
+    Enable('Tick');
+}
+
+event Tick(float DeltaTime) {
+    if (TicksToWait-- <= 0) {
+        UpdateAllRespawnTimesForEveryone();
+        Disable('Tick');
+    }
+}
+
 function Reset() {
     super.Reset();
-    SetTimer(0.001, false, 'UpdateAllRespawnTimesForEveryone');
+    // due to way how latent functions work, we have to wait a bit
+    // 2 ticks is enough, but let's use 3, just in case
+    DelayedUpdateRespawnTimesForEveryone(3);
 }
 
 function MatchStarting() {
     super.MatchStarting();
-    SetTimer(0.001, false, 'UpdateAllRespawnTimesForEveryone');
+    // due to way how latent functions work, we have to wait a bit
+    DelayedUpdateRespawnTimesForEveryone(3);
 }
 
 function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
@@ -138,22 +155,32 @@ function UpdateRespawnTime(
 {
     local float EstimatedRespawnTime;
     local UTPickupFactory UTPF;
+        
+    EstimatedRespawnTime = WorldInfo.TimeSeconds;
 
-    if (F.IsInState('WaitingForMatch')) {
+    if (F.IsInState('WaitingForMatch') || F.IsInState('Disabled') || F.IsInState('SleepInfinite') || F.IsInState('WaitingForDeployable')) {
         EstimatedRespawnTime = -1;
-    } else {
-        if (bJustPickedUp) {
-            EstimatedRespawnTime += F.GetRespawnTime();
+    } else if (bJustPickedUp) {
+        EstimatedRespawnTime += F.GetRespawnTime();
+    } else if (F.IsInState('Pickup')) {
+        // it's available right now
+    } else if (F.IsInState('Sleeping')) {
+        UTPF = UTPickupFactory(F);
+        if (F.LatentFloat <= 0.0) {
+            // state code hasn't started executing yet OR just finished
+            if (UTPF != None && UTPF.bIsRespawning) {
+                EstimatedRespawnTime += F.RespawnEffectTime;
+            } else {
+                EstimatedRespawnTime += F.GetRespawnTime();
+            }
         } else {
             EstimatedRespawnTime += F.LatentFloat;
 
-            UTPF = UTPickupFactory(F);
             if (UTPF != None && !UTPF.bIsRespawning) {
                 EstimatedRespawnTime += F.RespawnEffectTime;
             }
-        } 
-        EstimatedRespawnTime += WorldInfo.TimeSeconds;
-    }
+        }
+    } 
     
     if (i == INDEX_NONE) {
         i = WatchedPickupFactories.Find(F);
