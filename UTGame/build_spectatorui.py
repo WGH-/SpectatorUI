@@ -8,6 +8,9 @@ import build
 import unreal_package
 import unreal_bytecode
 
+VERSION = "2_1"
+PACKAGE_NAME = "SpectatorUI_" + VERSION
+
 def patch_bytecode(bytecode):
     decoded = unreal_bytecode.BytecodeReader(io.BytesIO(bytecode))
 
@@ -24,7 +27,7 @@ def patch_bytecode(bytecode):
 
 def patch_package():
     # black magic
-    with open("Published/CookedPC/Script/SpectatorUI_2.u", "r+b") as f:
+    with open("Published/CookedPC/Script/{}.u".format(PACKAGE_NAME), "r+b") as f:
         pkg = unreal_package.UnrealPackage(f)
         
         offset, size = pkg.find_function_bytecode(["Default__SpectatorUI_Mut", "ModifyParentSequence"])
@@ -40,21 +43,21 @@ def patch_package():
         print("bytecode successfully patched", file=sys.stderr)
 
 def main():
-    if not os.path.exists("Src/SpectatorUI_2"):
-        print("Please create a symlink from 'Src/SpectatorUI' to 'Src/SpectatorUI_2'", file=sys.stderr)
+    if not os.path.exists("Src/{}".format(PACKAGE_NAME)):
+        print("Please create a symlink from 'Src/SpectatorUI' to 'Src/{}'".format(PACKAGE_NAME), file=sys.stderr)
         raise SystemExit(1)
 
     build.build(
-        mods=["SpectatorUI_2"],
+        mods=[PACKAGE_NAME],
         files_to_hide=[
             "Config/UTSpectatorUI_Bookmarks.ini", 
             "Config/UTSpectatorUI.ini",
         ],
         merges=[
-            ("Unpublished/CookedPC/SpectatorUI_Content.upk", "Unpublished/CookedPC/Script/SpectatorUI_2.u"),
+            ("Unpublished/CookedPC/SpectatorUI_Content.upk", "Unpublished/CookedPC/Script/{}.u".format(PACKAGE_NAME)),
         ],
         cooking=[
-            "SpectatorUI_2"
+            PACKAGE_NAME
         ]
     )
     
