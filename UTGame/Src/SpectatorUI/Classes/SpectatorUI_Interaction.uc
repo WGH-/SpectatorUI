@@ -450,6 +450,7 @@ function RenderPickupTimers(Canvas C)
     local int SecondsLeft;
     local string s;
     local float XL, YL;
+    local float FirstColumnSize;
     local color VisibleColor, HiddenColor;
     local LocalPlayer LP;
 
@@ -459,15 +460,17 @@ function RenderPickupTimers(Canvas C)
     LP = LocalPlayer(Player);
 
     VisibleColor = HUD.GoldColor;
-    HiddenColor.R = VisibleColor.R / 2;
-    HiddenColor.G = VisibleColor.G / 2;
-    HiddenColor.B = VisibleColor.B / 2;
+    HiddenColor.R = VisibleColor.R / 5 * 3;
+    HiddenColor.G = VisibleColor.G / 5 * 3;
+    HiddenColor.B = VisibleColor.B / 5 * 3;
     HiddenColor.A = VisibleColor.A;
 
     C.Reset();
     C.Font = HUD.GetFontSizeIndex(0);
 
     C.SetOrigin(14.0, C.ClipY / 8);
+
+    C.TextSize("000 ", FirstColumnSize, YL);
 
     for (i = 0; i < RespawnTimers.Length; i++) {
         if (RespawnTimers[i].EstimatedRespawnTime < 0) {
@@ -483,9 +486,14 @@ function RenderPickupTimers(Canvas C)
     
         // add 1.0 because I want it to respawn when timer hits exactly zero
         SecondsLeft = (RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta)) / WorldInfo.TimeDilation + 1.0;
-        s = RespawnTimers[i].PickupName $ ": " $ SecondsLeft <= 0 ? "!" : string(SecondsLeft);
-        C.TextSize(S, XL, YL);
+
+        s = (SecondsLeft <= 0 ? "+" : string(SecondsLeft)) $ "  ";
+        C.TextSize(s, XL, YL);
+        C.CurX = FirstColumnSize - XL;
         C.DrawTextClipped(s);
+
+        C.CurX = FirstColumnSize;
+        C.DrawTextClipped(RespawnTimers[i].PickupName);
         C.CurY += YL;
     }
 }
