@@ -140,6 +140,14 @@ function Spectate() {
     RI.ServerSpectate();
 }
 
+exec function cg_followPowerup(bool x) {
+    SpectatorUI_FollowPowerup(x);
+}
+
+exec function SpectatorUI_FollowPowerup(bool x) {
+    RI.bFollowPowerup = x;
+}
+
 static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
     local bool bPostRenderOtherTeam;
     local float TeamBeaconMaxDist;

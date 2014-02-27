@@ -7,6 +7,8 @@ var SpectatorUI_Interaction SUI;
 var float ServerTimeDelta;
 var float ServerTimeSeconds;
 
+var bool bFollowPowerup;
+
 // set only on server
 struct PointsOfInterestContainer {
     var Actor Actors[3];
@@ -197,11 +199,16 @@ reliable client function ClientInterestingPickupTaken(PickupFactory F, class<Act
     local string Desc;
 
     Desc = GetPickupName(What); 
+
+    Desc = Desc @ "has been picked up by" @ Who.GetPlayerAlias() $ ".";
+
+    if (bFollowPowerup) {
+        ServerViewPointOfInterest(); 
+    } else {
+        Desc = Desc @ "Press * to jump to that player.";
+    }
     
-    PlayerController(Owner).ClientMessage(
-        Desc @ "has been picked up by" @ Who.GetPlayerAlias() $ "." $
-        " Press * to jump to that player."
-    );
+    PlayerController(Owner).ClientMessage(Desc);
 }
 
 function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime) {
