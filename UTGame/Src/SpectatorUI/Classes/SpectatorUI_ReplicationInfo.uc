@@ -19,6 +19,8 @@ var PointsOfInterestContainer PointsOfInterest;
 var SpectatorUI_Mut Mut;
 var bool bTimeReplicated;
 
+var bool bFollowKiller;
+
 replication {
     if (bNetInitial)
         Owner_;
@@ -371,6 +373,18 @@ reliable server function ServerSpectate() {
     } else {
         PC.ReceiveLocalizedMessage(G.GameMessageClass, 12);
     }
+}
+
+function ScoreKill(Controller Killer, Controller Killed)
+{
+    if (bFollowKiller) {
+         ViewPlayer(Killer.PlayerReplicationInfo);
+    }
+}
+
+reliable server function SetFollowKiller(bool x)
+{
+    bFollowKiller = x;
 }
 
 defaultproperties

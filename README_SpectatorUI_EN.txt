@@ -36,8 +36,11 @@ SpectatorUI_AddSpeed <speed> - increase camera speed by specified amount (can be
 SpectatorUI_MultiplySpeed <multiplier> - multiplies camera speed by specified amount
 becomespectator - become spectator, if possible
 
-SpectatorUI_FollowPowerup - automatically jump to players who takes a powerup
+SpectatorUI_FollowPowerup <1|0> - automatically jump to players who takes a powerup
 cg_followPowerup <1|0> - same, Quake compatibility
+
+SpectatorUI_FollowKiller <1|0> - automatically jump to player who frags anyone
+cg_followKiller <1|0> - same, Quake compatibility
 
 === Config file ===
 You can use configuration file to adjust many options to your liking.

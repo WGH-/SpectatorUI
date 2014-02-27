@@ -148,6 +148,14 @@ exec function SpectatorUI_FollowPowerup(bool x) {
     RI.bFollowPowerup = x;
 }
 
+exec function cg_followKiller(bool x) {
+    SpectatorUI_FollowKiller(x);
+}
+
+exec function SpectatorUI_FollowKiller(bool x) {
+    RI.SetFollowKiller(x);
+}
+
 static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
     local bool bPostRenderOtherTeam;
     local float TeamBeaconMaxDist;

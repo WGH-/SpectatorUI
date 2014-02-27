@@ -13,6 +13,8 @@ var int TicksToWait;
 //}
 
 function PostBeginPlay() {
+    local SpectatorUI_GameRules GR;
+
     super.PostBeginPlay();
 
     if (bDeleteMe) return;
@@ -21,6 +23,14 @@ function PostBeginPlay() {
     // 1. until AllNavigationPoints becomes avaiable
     // 2. to give other mutators chance to disable pickups, if they wish so
     SetTimer(0.001, false, 'AttachSequenceObjectsToPickups');
+
+    GR = Spawn(class'SpectatorUI_GameRules');
+    GR.Mut = self;
+    if (WorldInfo.Game.GameRulesModifiers == None) {
+        WorldInfo.Game.GameRulesModifiers = GR;
+    } else {
+        WorldInfo.Game.GameRulesModifiers.AddGameRules(GR);
+    }
 }
 
 function bool CheckReplacement(Actor Other) {
@@ -91,6 +101,14 @@ function NotifyBecomeActivePlayer(PlayerController PC) {
             RI.NotifyBecomeActive();
             break;
         }
+    }
+}
+
+// called by SpectatorUI_GameRules::ScoreKill
+function ScoreKill(Controller Killer, Controller Killed) {
+    local SpectatorUI_ReplicationInfo RI;
+    foreach RIs(RI) {
+        RI.ScoreKill(Killer, Killed);
     }
 }
 
