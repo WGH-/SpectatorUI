@@ -76,10 +76,6 @@ static function SpectatorUI_Interaction FindInteraction(UTPlayerController PC) {
     return None;
 }
 
-static final function bool SameDirection(vector a, vector b) {
-    return a dot b >= 0;
-}
-
 function bool ShouldRender() {
     // the same condition appears in UTHUD::DrawGameHud
     return PlayerReplicationInfo != None && (PlayerReplicationInfo.bOnlySpectator || Outer.IsInState('Spectating'));
@@ -90,11 +86,14 @@ event PostRender(Canvas Canvas) {
     local rotator Rot;
     local UTHUD HUD;
     local Actor A;
+    local LocalPlayer LP;
     
     super.PostRender(Canvas);
 
     HUD = UTHUD(myHUD);
     if (HUD == None || !ShouldRender()) return;
+
+    LP = LocalPlayer(Player);
 
     // even though SpectatorUI works fine with "temporary" spectators
     // don't show manual unless spectator is totally spectator
@@ -111,7 +110,7 @@ event PostRender(Canvas Canvas) {
 
     foreach HUD.PostRenderedActors(A) {
         if (A == None) continue;
-        if (!SameDirection(Dir, A.Location - Loc)) continue;
+        if (!LP.GetActorVisibility(A)) continue;
 
         if (UTPawn(A) != None) {
             UTPawn_PostRenderFor(UTPawn(A), Outer, Canvas, Loc, Dir);
