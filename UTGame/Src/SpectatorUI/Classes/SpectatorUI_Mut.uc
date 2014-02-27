@@ -230,6 +230,46 @@ function bool IsPickupFactoryInteresting(UTPickupFactory F) {
     return false;
 }
 
+function int GetCategory(PickupFactory F, out int additional)
+{
+    // 4. Powerups (UD, Berserk)
+    // 3. Super-weapons
+    // 2. Armors and health
+    // 1. Misc (jump boots, deployables) and everthing else
+
+    if (UTPowerupPickupFactory(F) != None && F.bIsSuperItem) return 4;
+    if (UTWeaponPickupFactory(F) != None && F.bIsSuperItem) return 3;
+    if (UTArmorPickupFactory(F) != None ) {
+        additional = UTArmorPickupFactory(F).ShieldAmount;
+        return 2;
+    }
+    if (UTHealthPickupFactory(F) != None) {
+        additional = UTHealthPickupFactory(F).HealingAmount;
+        return 2;
+    }
+    return 1;
+}
+
+function int ComparePickupFactories(PickupFactory A, PickupFactory B)
+{
+    local int res, extra_a, extra_b;
+    res = GetCategory(B, extra_b) - GetCategory(A, extra_a);
+    if (res == 0) res = extra_b - extra_a;
+    if (res == 0) res = (A.InventoryType == B.InventoryType ? 0 : -1);
+    return res;
+}
+
+function AddWatchedFactory(PickupFactory F) {
+    local int i;
+
+    for (i = 0; i < WatchedPickupFactories.Length; i++) {
+        if (ComparePickupFactories(WatchedPickupFactories[i], F) >= 0) {
+            break;
+        }
+    }
+    WatchedPickupFactories.InsertItem(i, F);
+}
+
 function AttachSequenceObjectsToPickups() {
     local UTPickupFactory Factory;
     local SeqEvent_PickupStatusChange_Delegate PSC;
@@ -248,7 +288,7 @@ function AttachSequenceObjectsToPickups() {
         ModifyParentSequence(PSC, FakeParent);
         Factory.GeneratedEvents.AddItem(PSC);
         
-        WatchedPickupFactories.AddItem(Factory);
+        AddWatchedFactory(Factory);
 
         // push update to existing spectators, though it's unlikely there are any
         UpdateRespawnTime(Factory, WatchedPickupFactories.Length - 1);
