@@ -8,6 +8,8 @@ var array<PickupFactory> WatchedPickupFactories;
 
 var int TicksToWait;
 
+var config float RejoinDelay;
+
 //function InitMutator(string Options, out string ErrorMessage) {
 //    super.InitMutator(Options, ErrorMessage);
 //}
@@ -102,6 +104,24 @@ function NotifyBecomeActivePlayer(PlayerController PC) {
             break;
         }
     }
+}
+
+function bool AllowBecomeActivePlayer(PlayerController PC) {
+    local SpectatorUI_ReplicationInfo RI;
+
+    if (PC.PlayerReplicationInfo != None && !PC.PlayerReplicationInfo.bAdmin) {
+        foreach RIs(RI) {
+            if (RI.Owner == PC) {
+                if (RI.LastBecomeSpectatorTime >= 0 && WorldInfo.TimeSeconds - RI.LastBecomeSpectatorTime < RejoinDelay) {
+                    return false;
+                }
+                break;
+            }
+        }
+    }
+
+    return super.AllowBecomeActivePlayer(PC);
+
 }
 
 // called by SpectatorUI_GameRules::ScoreKill
@@ -341,4 +361,5 @@ function AttachSequenceObjectsToPickups() {
 defaultproperties
 {
     bExportMenuData=false
+    RejoinDelay=15
 }

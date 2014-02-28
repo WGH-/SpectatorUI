@@ -43,6 +43,15 @@ SpectatorUI_FollowKiller <1|0> - automatically jump to player who frags anyone
 cg_followKiller <1|0> - same, Quake compatibility
 
 === Config file ===
+==== Server ====
+This section is relavant to server administrators willing to use this mutator.
+
+The config file is UTSpectatorUI.ini
+
+[SpectatorUI_2.SpectatorUI_Mut]
+RejoinDelay=15.0 ; seconds player must wait before becoming active again after becoming a spectator
+
+==== Client ====
 You can use configuration file to adjust many options to your liking.
 
 To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add the following lines. Omit it if you don't want to change the default.

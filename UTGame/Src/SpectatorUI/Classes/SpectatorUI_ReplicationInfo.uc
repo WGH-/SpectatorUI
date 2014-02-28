@@ -26,6 +26,8 @@ replication {
         Owner_;
 }
 
+var float LastBecomeSpectatorTime;
+
 // struct PointsOfInterestContainer "methods"
 
 simulated function AddInterestingActor(Actor A) {
@@ -376,6 +378,8 @@ reliable server function ServerSpectate() {
 
         G.UpdateGameSettingsCounts();
 
+        LastBecomeSpectatorTime = WorldInfo.TimeSeconds;
+
         G.BroadcastLocalizedMessage(G.GameMessageClass, 14, PRI);
     } else {
         PC.ReceiveLocalizedMessage(G.GameMessageClass, 12);
@@ -426,4 +430,5 @@ defaultproperties
 {
     bOnlyRelevantToOwner=true
     bAlwaysTick=True
+    LastBecomeSpectatorTime=-1
 }
