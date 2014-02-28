@@ -91,7 +91,14 @@ event PostRender(Canvas Canvas) {
     super.PostRender(Canvas);
 
     HUD = UTHUD(myHUD);
-    if (HUD == None || !ShouldRender()) return;
+    if (HUD == None) return;
+
+    if (!ShouldRender()) {
+        if (ShortManualRef != None) {
+            CloseManual();
+        }
+        return;
+    }
 
     LP = LocalPlayer(Player);
 
