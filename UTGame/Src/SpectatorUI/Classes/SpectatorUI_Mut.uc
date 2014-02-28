@@ -288,9 +288,24 @@ function AddWatchedFactory(PickupFactory F) {
     WatchedPickupFactories.InsertItem(i, F);
 }
 
+function OnFlagEventTrigger(UTGameObjective EventOriginator, name EventType, Controller EventInstigator) {
+    local SpectatorUI_ReplicationInfo RI;
+    local UTCTFBase UTCTFBase;
+
+    UTCTFBase = UTCTFBase(EventOriginator);
+
+    if (EventType == 'Taken') {
+        foreach RIs(RI) {
+            RI.FlagTaken(UTCTFBase, EventInstigator);
+        }   
+    }
+}
+
 function AttachSequenceObjectsToPickups() {
     local UTPickupFactory Factory;
+    local UTCTFBase UTCTFBase;
     local SeqEvent_PickupStatusChange_Delegate PSC;
+    local UTSeqEvent_FlagEvent_Delegate FE;
     local Sequence FakeParent;
     
     `log("Attaching sequence objects to pickup factories...");
@@ -312,6 +327,14 @@ function AttachSequenceObjectsToPickups() {
         UpdateRespawnTime(Factory, WatchedPickupFactories.Length - 1);
 
         `log("Attached" @ PSC @ "to" @ Factory);
+    }
+
+    foreach WorldInfo.AllNavigationPoints(class'UTCTFBase', UTCTFBase) {
+        FE = new(None) class'UTSeqEvent_FlagEvent_Delegate';
+        FE.Originator = UTCTFBase;
+        FE.OnTrigger = OnFlagEventTrigger;
+        ModifyParentSequence(FE, FakeParent);
+        UTCTFBase.GeneratedEvents.AddItem(FE);
     }
 }
 

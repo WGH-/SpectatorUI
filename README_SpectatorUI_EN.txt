@@ -14,7 +14,7 @@ Author: WGH, wgh@torlan.ru
  * Button that allows to switch to 3rd person camera 
  * Up to ten savable bookmarks per map
  * Clicking right mouse button detaches camera and leaves it where it currently is, not where it was some time ago
- * Notifications of powerups and superweapons being taken, with an option to jump to the player
+ * Notifications of powerups, superweapons, flags being taken, with an option to jump to the player
  * Timer for powerups, armor pickups and super weapons
 
 == Controls ==

@@ -40,6 +40,13 @@ reliable demorecording function DemoAddInterestingActor(Actor A) {
     AddInterestingActor(A);
 }   
 
+simulated function Actor GetBestViewTarget(Actor A) {
+    if (UTCTFFlag(A) != None) {
+        return UTCTFFlag(A).HomeBase.GetBestViewTarget();
+    }
+    return A;
+}
+
 simulated function Actor GetNextInterestingActor() {
     local Actor A;
     local int MinPtr;
@@ -49,7 +56,7 @@ simulated function Actor GetNextInterestingActor() {
     do {
         if (--PointsOfInterest.ReadPtr < 0) PointsOfInterest.ReadPtr = ArrayCount(PointsOfInterest.Actors) - 1;
     } until (PointsOfInterest.ReadPtr == MinPtr || PointsOfInterest.Actors[PointsOfInterest.ReadPtr] != None);
-    return A;
+    return GetBestViewTarget(A);
 }
 
 simulated event ReplicatedEvent(name VarName)
@@ -380,6 +387,34 @@ function ScoreKill(Controller Killer, Controller Killed)
     if (bFollowKiller) {
          ViewPlayer(Killer.PlayerReplicationInfo);
     }
+}
+
+function FlagTaken(UTCTFBase FlagBase, Controller EventInstigator)
+{
+    if (Owner.IsInState('Spectating')) {
+        AddInterestingActor(FlagBase.myFlag);
+        DemoAddInterestingActor(FlagBase.myFlag);
+        ClientFlagTaken(FlagBase.myFlag.GetTeamNum(), EventInstigator.PlayerReplicationInfo);
+    }   
+}
+
+reliable client function ClientFlagTaken(byte Team, PlayerReplicationInfo Who) {
+    local string Desc;
+
+    Desc = Who.GetPlayerAlias();
+
+    if (Team == 0) {
+        Desc = Desc @ class'UTCTFMessage'.default.hasBlue;
+    } else {
+        Desc = Desc @ class'UTCTFMessage'.default.hasRed;
+    }
+    if (bFollowPowerup) {
+        ServerViewPointOfInterest();
+    } else {
+        Desc = Desc @ "Press * to jump to that player.";
+    }
+
+    PlayerController(Owner).ClientMessage(Desc);
 }
 
 reliable server function SetFollowKiller(bool x)
