@@ -91,7 +91,7 @@ event PostRender(Canvas Canvas) {
     super.PostRender(Canvas);
 
     HUD = UTHUD(myHUD);
-    if (HUD == None) return;
+    if (HUD == None || RI == None) return;
 
     if (!ShouldRender()) {
         if (ShortManualRef != None) {
