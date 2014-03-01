@@ -517,10 +517,13 @@ function RenderPickupTimers(Canvas C)
         // add 1.0 because I want it to respawn when timer hits exactly zero
         SecondsLeft = (RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta)) / WorldInfo.TimeDilation + 1.0;
 
+        s = "";
         if ((flags & PICKUPTIMER_WAITINGFORMATCH) != 0) {
             // just don't display anything
         } else if ((flags & PICKUPTIMER_SCRIPTACTIVATED) != 0) {
             // same for now
+        } else if ((flags & PICKUPTIMER_WAITINGFORDEPLOYABLE) != 0) {
+            s $= "W";
         } else {
            s = (SecondsLeft <= 0 ? "+" : string(SecondsLeft)); 
         }

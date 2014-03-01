@@ -9,6 +9,9 @@ var bool bPendingUpdateAll;
 
 var int TicksToWait;
 
+const WAITING_FOR_DEPLOYABLE_POLLING_INTERVAL = 1.0;
+var array<PickupFactory> WaitingForDeployablePolling;
+
 var config float RejoinDelay;
 var config bool bPowerupTimers;
 
@@ -229,11 +232,15 @@ function UpdateRespawnTime(
         return;
     }
 
-    if (F.IsInState('Disabled') ) {
+    if (F.IsInState('Disabled')) {
         EstimatedRespawnTime = -1;
-    } else if (F.IsInState('SleepInfinite') || F.IsInState('Inactive') || F.IsInState('WaitingForDeployable')) {
+    } else if (F.IsInState('SleepInfinite') || F.IsInState('Inactive')) {
         EstimatedRespawnTime = -1;
         flags = flags | class'SpectatorUI_Interaction'.const.PICKUPTIMER_SCRIPTACTIVATED;
+    } else if (F.IsInState('WaitingForDeployable')) {
+        EstimatedRespawnTime = -1;
+        flags = flags | class'SpectatorUI_Interaction'.const.PICKUPTIMER_WAITINGFORDEPLOYABLE;
+        AddWaitingForDeployableFactory(F);
     } else if (F.IsInState('WaitingForMatch')) {
         EstimatedRespawnTime = -1;
         flags = flags | class'SpectatorUI_Interaction'.const.PICKUPTIMER_WAITINGFORMATCH;
@@ -256,8 +263,6 @@ function UpdateRespawnTime(
             }
         }
     } 
-    
-
     
     if (RI == None) {
         foreach RIs(RI) {
@@ -330,12 +335,36 @@ function int ComparePickupFactories(PickupFactory A, PickupFactory B)
 function AddWatchedFactory(PickupFactory F) {
     local int i;
 
+    // insert sort
     for (i = 0; i < WatchedPickupFactories.Length; i++) {
         if (ComparePickupFactories(WatchedPickupFactories[i], F) >= 0) {
             break;
         }
     }
     WatchedPickupFactories.InsertItem(i, F);
+}
+
+function AddWaitingForDeployableFactory(PickupFactory F) {
+    if (WaitingForDeployablePolling.Find(F) == INDEX_NONE) {
+        WaitingForDeployablePolling.AddItem(F);
+    }
+    if (!IsTimerActive('PollWaitingForDeployableFactories')) {
+        SetTimer(WAITING_FOR_DEPLOYABLE_POLLING_INTERVAL, true, 'PollWaitingForDeployableFactories');
+    }
+}
+
+function PollWaitingForDeployableFactories() {
+    local int i;
+    for (i = 0; i < WaitingForDeployablePolling.Length; i++) {
+        if (!WaitingForDeployablePolling[i].IsInState('WaitingForDeployable')) {
+            UpdateRespawnTime(WaitingForDeployablePolling[i]);
+            WaitingForDeployablePolling.Remove(i, 1);
+            i--;
+        }
+    }
+    if (WaitingForDeployablePolling.Length == 0) {
+        ClearTimer('PollWaitingForDeployableFactories');
+    }
 }
 
 function OnFlagEventTrigger(UTGameObjective EventOriginator, name EventType, Controller EventInstigator) {
