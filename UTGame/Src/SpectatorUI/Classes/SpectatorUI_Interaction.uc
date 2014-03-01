@@ -34,11 +34,17 @@ var bool bShortManualShown;
 
 var transient bool bZoomButtonHeld;
 
+// if ExpectedTime < 0, these flags give us additional info
+const PICKUPTIMER_WAITINGFORMATCH = 0x1;
+const PICKUPTIMER_SCRIPTACTIVATED = 0x2;
+const PICKUPTIMER_WAITINGFORDEPLOYABLE = 0x4;
+
 // pickup respawn timers
 struct SpectatorUI_RespawnTimer {
     var string PickupName;
     var float EstimatedRespawnTime;
     var PickupFactory PickupFactory;
+    var int Flags;
 };
 var array<SpectatorUI_RespawnTimer> RespawnTimers;
 
@@ -475,6 +481,7 @@ function RenderPickupTimers(Canvas C)
     local float FirstColumnSize;
     local color VisibleColor, HiddenColor;
     local LocalPlayer LP;
+    local int flags;
 
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
@@ -495,7 +502,8 @@ function RenderPickupTimers(Canvas C)
     C.TextSize("000 ", FirstColumnSize, YL);
 
     for (i = 0; i < RespawnTimers.Length; i++) {
-        if (RespawnTimers[i].EstimatedRespawnTime < 0) {
+        flags = RespawnTimers[i].Flags;
+        if (RespawnTimers[i].EstimatedRespawnTime < 0 && flags == 0) {
             // disabled, inactive, or something like that
             continue;
         }
@@ -509,7 +517,16 @@ function RenderPickupTimers(Canvas C)
         // add 1.0 because I want it to respawn when timer hits exactly zero
         SecondsLeft = (RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta)) / WorldInfo.TimeDilation + 1.0;
 
-        s = (SecondsLeft <= 0 ? "+" : string(SecondsLeft)) $ "  ";
+        if ((flags & PICKUPTIMER_WAITINGFORMATCH) != 0) {
+            // just don't display anything
+        } else if ((flags & PICKUPTIMER_SCRIPTACTIVATED) != 0) {
+            s = "?";
+        } else {
+           s = (SecondsLeft <= 0 ? "+" : string(SecondsLeft)); 
+        }
+
+        s = s $ "  ";
+
         C.TextSize(s, XL, YL);
         C.CurX = FirstColumnSize - XL;
         C.DrawTextClipped(s);
@@ -603,7 +620,7 @@ function CloseManual() {
     }
 }
 
-function UpdateRespawnTime(PickupFactory F, string PickupName, int i, float ExpectedTime) {
+function UpdateRespawnTime(PickupFactory F, string PickupName, int i, float ExpectedTime, int flags) {
     while (RespawnTimers.Length - 1 < i) {
         RespawnTimers.Length = RespawnTimers.Length + 1;
         RespawnTimers[RespawnTimers.Length - 1].EstimatedRespawnTime = -1;
@@ -614,6 +631,7 @@ function UpdateRespawnTime(PickupFactory F, string PickupName, int i, float Expe
     RespawnTimers[i].PickupFactory = F;
     RespawnTimers[i].PickupName = PickupName;
     RespawnTimers[i].EstimatedRespawnTime = ExpectedTime;
+    RespawnTimers[i].Flags = flags;
 }
 
 defaultproperties

@@ -4,6 +4,9 @@ class SpectatorUI_Mut extends UTMutator
 var array<SpectatorUI_ReplicationInfo> RIs;
 var array<PickupFactory> WatchedPickupFactories;
 
+var array<PickupFactory> PendingUpdates;
+var bool bPendingUpdateAll;
+
 var int TicksToWait;
 
 var config float RejoinDelay;
@@ -131,14 +134,37 @@ function ScoreKill(Controller Killer, Controller Killed) {
     }
 }
 
-function DelayedUpdateRespawnTimesForEveryone(int Ticks) {
-    TicksToWait = Ticks;
+function DelayedUpdateRespawnTimesEverything(int Ticks) {
+    TicksToWait = Max(Ticks, TicksToWait);
+    bPendingUpdateAll = true;
     Enable('Tick');
+}
+
+function DelayedUpdateRespawnTime(int Ticks, PickupFactory F) {
+    TicksToWait = Max(Ticks, TicksToWait);
+    if (PendingUpdates.Find(F) == INDEX_NONE) {
+        PendingUpdates.AddItem(F);
+    }
+    Enable('Tick');
+}
+
+function DoDelayedUpdate() {
+    local PickupFactory F;
+
+    if (bPendingUpdateAll) {
+        UpdateAllRespawnTimesFor(None);
+        bPendingUpdateAll = false;
+    } else {
+        foreach PendingUpdates(F) {
+            UpdateRespawnTime(F);
+        }
+    }
+    PendingUpdates.Length = 0;
 }
 
 event Tick(float DeltaTime) {
     if (TicksToWait-- <= 0) {
-        UpdateAllRespawnTimesForEveryone();
+        DoDelayedUpdate();
         Disable('Tick');
     }
 }
@@ -147,13 +173,13 @@ function Reset() {
     super.Reset();
     // due to way how latent functions work, we have to wait a bit
     // 2 ticks is enough, but let's use 3, just in case
-    DelayedUpdateRespawnTimesForEveryone(3);
+    DelayedUpdateRespawnTimesEverything(3);
 }
 
 function MatchStarting() {
     super.MatchStarting();
     // due to way how latent functions work, we have to wait a bit
-    DelayedUpdateRespawnTimesForEveryone(3);
+    DelayedUpdateRespawnTimesEverything(3);
 }
 
 function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
@@ -164,14 +190,11 @@ function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
         foreach RIs(RI) {
             RI.InterestingPickupTaken(EventInstigator, F, None);
         }
-        UpdateRespawnTime(F, , , true);
+        DelayedUpdateRespawnTime(3, F);
     } else {
-        // available   
+        // available
+        DelayedUpdateRespawnTime(1, F);
     }
-}
-
-function UpdateAllRespawnTimesForEveryone() {
-    UpdateAllRespawnTimesFor(None);
 }
 
 function UpdateAllRespawnTimesFor(SpectatorUI_ReplicationInfo RI) {
@@ -186,21 +209,34 @@ function UpdateAllRespawnTimesFor(SpectatorUI_ReplicationInfo RI) {
 function UpdateRespawnTime(
     PickupFactory F, 
     optional int i = INDEX_NONE, 
-    optional SpectatorUI_ReplicationInfo RI = None,
-    optional bool bJustPickedUp = false
+    optional SpectatorUI_ReplicationInfo RI = None
 ) 
 {
     local float EstimatedRespawnTime;
     local UTPickupFactory UTPF;
+    local int flags;
 
     if (!bPowerupTimers) return;
         
     EstimatedRespawnTime = WorldInfo.TimeSeconds;
+    
+    if (i == INDEX_NONE) {
+        i = WatchedPickupFactories.Find(F);
+    }
 
-    if (F.IsInState('WaitingForMatch') || F.IsInState('Disabled') || F.IsInState('SleepInfinite') || F.IsInState('WaitingForDeployable')) {
+    if (i == INDEX_NONE) {
+        `warn("Tried to update respawn time of unregistered factory");
+        return;
+    }
+
+    if (F.IsInState('Disabled') || F.IsInState('WaitingForDeployable') || F.IsInState('Inactive')) {
         EstimatedRespawnTime = -1;
-    } else if (bJustPickedUp) {
-        EstimatedRespawnTime += F.GetRespawnTime();
+    } else if (F.IsInState('SleepInfinite')) {
+        EstimatedRespawnTime = -1;
+        flags = flags | class'SpectatorUI_Interaction'.const.PICKUPTIMER_SCRIPTACTIVATED;
+    } else if (F.IsInState('WaitingForMatch')) {
+        EstimatedRespawnTime = -1;
+        flags = flags | class'SpectatorUI_Interaction'.const.PICKUPTIMER_WAITINGFORMATCH;
     } else if (F.IsInState('Pickup')) {
         // it's available right now
     } else if (F.IsInState('Sleeping')) {
@@ -221,21 +257,14 @@ function UpdateRespawnTime(
         }
     } 
     
-    if (i == INDEX_NONE) {
-        i = WatchedPickupFactories.Find(F);
-    }
 
-    if (i == INDEX_NONE) {
-        `warn("Tried to update respawn time of unregistered factory");
-        return;
-    }
     
     if (RI == None) {
         foreach RIs(RI) {
-            RI.UpdateRespawnTime(F, i, EstimatedRespawnTime);
+            RI.UpdateRespawnTime(F, i, EstimatedRespawnTime, flags);
         }
     } else {
-        RI.UpdateRespawnTime(F, i, EstimatedRespawnTime);
+        RI.UpdateRespawnTime(F, i, EstimatedRespawnTime, flags);
     }
 }
 
@@ -322,11 +351,24 @@ function OnFlagEventTrigger(UTGameObjective EventOriginator, name EventType, Con
     }
 }
 
+function OnOnslaughtNodeEventTrigger(UTOnslaughtNodeObjective Node, Controller EventInstigator)
+{
+    local UTDeployableNodeLocker L;
+
+    foreach Node.DeployableLockers(L) {
+        DelayedUpdateRespawnTime(3, L);
+    }
+}
+
 function AttachSequenceObjectsToPickups() {
     local UTPickupFactory Factory;
     local UTCTFBase UTCTFBase;
+    local UTOnslaughtNodeObjective Node;
+
     local SeqEvent_PickupStatusChange_Delegate PSC;
     local UTSeqEvent_FlagEvent_Delegate FE;
+    local UTSeqEvent_OnslaughtNodeEvent_Delegate ONE;
+
     local Sequence FakeParent;
     
     `log("Attaching sequence objects to pickup factories...");
@@ -356,6 +398,14 @@ function AttachSequenceObjectsToPickups() {
         FE.OnTrigger = OnFlagEventTrigger;
         ModifyParentSequence(FE, FakeParent);
         UTCTFBase.GeneratedEvents.AddItem(FE);
+    }
+
+    foreach WorldInfo.AllNavigationPoints(class'UTOnslaughtNodeObjective',Node) {
+        ONE = new(None) class'UTSeqEvent_OnslaughtNodeEvent_Delegate';
+        ONE.Originator = Node;
+        ONE.OnTrigger = OnOnslaughtNodeEventTrigger;
+        ModifyParentSequence(PSC, FakeParent);
+        Node.GeneratedEvents.AddItem(ONE);
     }
 }
 

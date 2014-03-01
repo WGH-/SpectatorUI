@@ -222,16 +222,16 @@ reliable client function ClientInterestingPickupTaken(PickupFactory F, class<Act
     PlayerController(Owner).ClientMessage(Desc);
 }
 
-function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime) {
+function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime, int flags) {
     // important check, again
     if (!Owner.IsInState('Spectating')) return;
     
     TryReplicateTimeDelta();
-    ClientUpdateRespawnTime(F, GetPickupClass(F), i, ExpectedTime);
+    ClientUpdateRespawnTime(F, GetPickupClass(F), i, ExpectedTime, flags);
 }
 
-reliable client function ClientUpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float ExpectedTime) {
-    SUI.UpdateRespawnTime(F, GetPickupName(Clazz), i, ExpectedTime);
+reliable client function ClientUpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float ExpectedTime, int flags) {
+    SUI.UpdateRespawnTime(F, GetPickupName(Clazz), i, ExpectedTime, flags);
 }
 
 simulated function ViewPointOfInterest() {
