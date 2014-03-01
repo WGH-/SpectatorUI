@@ -2,7 +2,6 @@ class UTSeqEvent_OnslaughtNodeEvent_Delegate extends UTSeqEvent_OnslaughtNodeEve
 
 function NotifyNodeChanged(Controller EventInstigator)
 {
-    `log(Originator @ "NodeChanged");
     // don't call super
     OnTrigger(UTOnslaughtNodeObjective(Originator), EventInstigator);
 }

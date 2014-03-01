@@ -229,9 +229,9 @@ function UpdateRespawnTime(
         return;
     }
 
-    if (F.IsInState('Disabled') || F.IsInState('WaitingForDeployable') || F.IsInState('Inactive')) {
+    if (F.IsInState('Disabled') ) {
         EstimatedRespawnTime = -1;
-    } else if (F.IsInState('SleepInfinite')) {
+    } else if (F.IsInState('SleepInfinite') || F.IsInState('Inactive') || F.IsInState('WaitingForDeployable')) {
         EstimatedRespawnTime = -1;
         flags = flags | class'SpectatorUI_Interaction'.const.PICKUPTIMER_SCRIPTACTIVATED;
     } else if (F.IsInState('WaitingForMatch')) {
@@ -360,6 +360,57 @@ function OnOnslaughtNodeEventTrigger(UTOnslaughtNodeObjective Node, Controller E
     }
 }
 
+function OnPickupFactoryRelatedSeqActToggleActivate(SeqAct_Delegate SeqAct)
+{
+    local Object Obj;
+
+    foreach SeqAct.Args(Obj) {
+        DelayedUpdateRespawnTime(3, PickupFactory(Obj));
+    }
+}
+
+function HookKismetToggleActions() {
+    local array<SequenceObject> SeqObjects;
+    local SequenceObject SO;
+
+    local SequenceAction SA;
+    local SeqVar_Object SVO;
+    local PickupFactory PF;
+
+    local SeqAct_Delegate SAD;
+
+    local SeqOpOutputInputLink OutputLink;
+
+    local array<Object> Args;
+
+    WorldInfo.GetGameSequence().FindSeqObjectsByClass(class'SeqAct_Toggle', true, SeqObjects);
+
+    foreach SeqObjects(SO) {
+        SA = SequenceAction(SO);
+        Args.Length = 0;
+        foreach SA.LinkedVariables(class'SeqVar_Object', SVO) {
+            PF = PickupFactory(SVO.GetObjectValue());
+            if (PF != None && WatchedPickupFactories.Find(PF) != INDEX_NONE) {
+                Args.AddItem(PF);
+            }
+        }
+
+        if (Args.Length > 0) {
+            SAD = new(None) class'SeqAct_Delegate';
+            SAD.Args = Args;
+            SAD.OnActivated = OnPickupFactoryRelatedSeqActToggleActivate;
+
+            OutputLink.LinkedOp = SAD;
+            OutputLink.InputLinkIdx = 0;
+            SA.OutputLinks[0].Links.AddItem(OutputLink);
+            
+            ModifyParentSequence(SAD, WorldInfo.GetGameSequence());
+        }
+    }
+}
+
+   
+
 function AttachSequenceObjectsToPickups() {
     local UTPickupFactory Factory;
     local UTCTFBase UTCTFBase;
@@ -407,6 +458,8 @@ function AttachSequenceObjectsToPickups() {
         ModifyParentSequence(PSC, FakeParent);
         Node.GeneratedEvents.AddItem(ONE);
     }
+
+    HookKismetToggleActions();
 }
 
 defaultproperties

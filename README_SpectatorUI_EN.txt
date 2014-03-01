@@ -15,7 +15,7 @@ Author: WGH, wgh@torlan.ru
  * Up to ten savable bookmarks per map
  * Clicking right mouse button detaches camera and leaves it where it currently is, not where it was some time ago
  * Notifications of powerups, superweapons, flags being taken, with an option to jump to the player
- * Timer for powerups, armor pickups and super weapons
+ * Timer for powerups, armor pickups and super weapons (Kismet-activated pickup factories are also supported)
 
 == Controls ==
  * Number row - camera speed control, ranging from 1/8 to 64 of default speed (exponential scaling)

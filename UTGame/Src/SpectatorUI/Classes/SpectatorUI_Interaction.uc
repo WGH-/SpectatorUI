@@ -520,7 +520,7 @@ function RenderPickupTimers(Canvas C)
         if ((flags & PICKUPTIMER_WAITINGFORMATCH) != 0) {
             // just don't display anything
         } else if ((flags & PICKUPTIMER_SCRIPTACTIVATED) != 0) {
-            s = "?";
+            // same for now
         } else {
            s = (SecondsLeft <= 0 ? "+" : string(SecondsLeft)); 
         }
