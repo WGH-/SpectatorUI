@@ -1,14 +1,13 @@
 class SpectatorUI_Mut extends UTMutator
     config(SpectatorUI);
 
-var array<class<Inventory> > InterestingPickupClasses;
-
 var array<SpectatorUI_ReplicationInfo> RIs;
 var array<PickupFactory> WatchedPickupFactories;
 
 var int TicksToWait;
 
 var config float RejoinDelay;
+var config bool bPowerupTimers;
 
 //function InitMutator(string Options, out string ErrorMessage) {
 //    super.InitMutator(Options, ErrorMessage);
@@ -193,6 +192,8 @@ function UpdateRespawnTime(
 {
     local float EstimatedRespawnTime;
     local UTPickupFactory UTPF;
+
+    if (!bPowerupTimers) return;
         
     EstimatedRespawnTime = WorldInfo.TimeSeconds;
 
@@ -361,5 +362,7 @@ function AttachSequenceObjectsToPickups() {
 defaultproperties
 {
     bExportMenuData=false
+    
     RejoinDelay=15
+    bPowerupTimers=true
 }
