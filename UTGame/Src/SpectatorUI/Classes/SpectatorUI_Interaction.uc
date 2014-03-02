@@ -278,7 +278,7 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                 } else if (Key == 'Multiply') {
                     RI.ViewPointOfInterest();
                 } else if (Key == BehindViewKey) {
-                    bForceBehindView = !bForceBehindView;
+                    BehindView(); 
                 } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                     BookmarkButtonPressed(Key); 
                 } else {
