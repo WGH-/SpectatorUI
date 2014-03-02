@@ -401,6 +401,11 @@ reliable server function ServerSpectate() {
 
 function ScoreKill(Controller Killer, Controller Killed)
 {
+    if (Killer == Killed || Killer == None) {
+        // ignore suicides
+        return;
+    }
+
     if (bFollowKiller) {
          ViewPlayer(Killer.PlayerReplicationInfo);
     } else if (DemoRecSpectator(Owner) != None) {
