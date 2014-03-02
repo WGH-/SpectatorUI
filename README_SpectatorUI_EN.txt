@@ -17,6 +17,14 @@ Author: WGH, wgh@torlan.ru
  * Notifications of powerups, superweapons, flags being taken, with an option to jump to the player
  * Timer for powerups, armor pickups and super weapons (Kismet-activated pickup factories are also supported)
 
+== Installation ==
+Contents of Script directory goes anywhere in \Documents\My Games\Unreal Tournament 3\UTGame\Published\CookedPC.
+Contents of Config directory goes in \Documents\My Games\Unreal Tournament 3\UTGame\Config
+
+Once it's done, mutator will be listed in the usual mutator list.
+
+For server administrators, class path is "SpectatorUI_2_1.SpectatorUI_Mut".
+
 == Known bugs ==
  * Pickup timers don't always work correctly with some items whose
    respawn is managed by Kismet or similar means (JB-Makoy is example of such map).
