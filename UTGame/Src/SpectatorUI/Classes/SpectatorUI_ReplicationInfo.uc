@@ -126,6 +126,12 @@ function TryReplicateTimeDelta() {
 
     //`log("Trying to replicate server time" @ WorldInfo.TimeSeconds);
     ClientReplicateTimeDelta(WorldInfo.TimeSeconds);
+
+    if (DemoRecSpectator(Owner) != None) {
+        bTimeReplicated = true;
+        return;
+    }
+
     // 16  = 4 (PRI.Ping is stored in byte divided by 4) * 4 (let's give more than enough time to answer)
     SetTimer(FMax(0.5, 0.25 + (16 * PlayerController(Owner).PlayerReplicationInfo.Ping) * 0.001) * WorldInfo.TimeDilation, false, 'TryReplicateTimeDelta');
 }

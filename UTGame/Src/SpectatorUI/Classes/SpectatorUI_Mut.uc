@@ -48,8 +48,16 @@ function PostBeginPlay() {
 }
 
 function bool CheckReplacement(Actor Other) {
+    local SpectatorUI_ReplicationInfo RI;
+
     if (DemoRecSpectator(Other) != None) {
-        RIs.AddItem(Spawn(class'SpectatorUI_ReplicationInfo', Other));
+        RI = Spawn(class'SpectatorUI_ReplicationInfo', Other);
+        RI.Mut = self;
+        RIs.AddItem(RI);
+
+        // since it's not properly initialized yet
+        // delay the call for one tick
+        RI.SetTimer(0.001, false, 'NotifyBecomeSpectator');
     }
     return true;
 }
