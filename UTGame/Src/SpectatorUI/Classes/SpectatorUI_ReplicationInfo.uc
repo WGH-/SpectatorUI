@@ -403,6 +403,14 @@ function ScoreKill(Controller Killer, Controller Killed)
 {
     if (bFollowKiller) {
          ViewPlayer(Killer.PlayerReplicationInfo);
+    } else if (DemoRecSpectator(Owner) != None) {
+        DemoScoreKill(Killer.PlayerReplicationInfo, Killed.PlayerReplicationInfo);
+    }
+}
+
+reliable demorecording function DemoScoreKill(PlayerReplicationInfo Killer, PlayerReplicationInfo Killed) {
+    if (bFollowKiller) {
+        ViewPlayer(Killer);
     }
 }
 
@@ -434,9 +442,18 @@ reliable client function ClientFlagTaken(byte Team, PlayerReplicationInfo Who) {
     PlayerController(Owner).ClientMessage(Desc);
 }
 
-reliable server function SetFollowKiller(bool x)
+reliable server function ServerSetFollowKiller(bool x)
 {
     bFollowKiller = x;
+}
+
+simulated function SetFollowKiller(bool x)
+{
+    if (DemoRecSpectator(Owner) != None) {
+        bFollowKiller = x;
+    } else {
+        ServerSetFollowKiller(x);
+    }
 }
 
 defaultproperties
