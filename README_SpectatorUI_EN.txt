@@ -1,9 +1,9 @@
-SpectatorUI version 2.0
+SpectatorUI version 2.1
 
 This mutator greatly enhances spectator's convenience.
 
 Author: WGH, wgh@torlan.ru
-23.02.2014
+02.03.2014
 
 == Features ==
  * Works offline, online and in server-recorded demos (provided mutator was active at the time of recording)
@@ -17,11 +17,19 @@ Author: WGH, wgh@torlan.ru
  * Notifications of powerups, superweapons, flags being taken, with an option to jump to the player
  * Timer for powerups, armor pickups and super weapons (Kismet-activated pickup factories are also supported)
 
+== Known bugs ==
+ * Pickup timers don't always work correctly with some items whose
+   respawn is managed by Kismet or similar means (JB-Makoy is example of such map).
+
+   Most of the time, though, they do work correctly (e.g. in WAR-Avalanche).
+
+ * Jump to objective (primary fire) doesn't work in demos.
+
 == Controls ==
  * Number row - camera speed control, ranging from 1/8 to 64 of default speed (exponential scaling)
  * Left mouse button (primary fire) - jump to objective like orb or flag (same as in stock game)
  * Middle mouse button + MouseY - change FOV (zoom)
- * Right mouse button (secondary fire) - detach camera, if it's following player or objective (same as in stock game, but enhanced)
+ * Right mouse button (secondary fire) - detach camera, if it's following player or objective (same as in stock game, but fixed)
  * Mouse scroll (previous/next weapon) - change players (same as in stock game, but enhanced)
  * Alt + NumPad number - save bookmark
  * NumPad number - load previously saved bookmark
@@ -65,4 +73,5 @@ BookmarkModifierButton=LeftAlt ; button you need to hold in order to save bookma
 ZoomButton=MiddleMouseButton ; button you need to hold in order to change FOV
 BehindViewKey=Q
 
-
+== Source code ==
+Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI
