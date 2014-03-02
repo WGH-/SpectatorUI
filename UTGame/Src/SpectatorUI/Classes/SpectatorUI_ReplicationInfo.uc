@@ -394,9 +394,16 @@ reliable server function ServerSpectate() {
         LastBecomeSpectatorTime = WorldInfo.TimeSeconds;
 
         G.BroadcastLocalizedMessage(G.GameMessageClass, 14, PRI);
+
+        ClientBecameSpectator();
     } else {
         PC.ReceiveLocalizedMessage(G.GameMessageClass, 12);
     }
+}
+
+reliable client function ClientBecameSpectator() 
+{
+    PlayerController(Owner).UpdateURL("SpectatorOnly", "1", false);    
 }
 
 function ScoreKill(Controller Killer, Controller Killed)
