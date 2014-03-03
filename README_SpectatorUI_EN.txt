@@ -104,5 +104,39 @@ To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add 
     RedFlagNotificationPattern=`s took the red flag.
     BlueFlagNotificationPattern=`s took the blue flag.
 
+    ; if you wish, you can customize pickup names like this
+    ; full list of pickup classes included in stock game
+    ; is listed in the appendix
+    CustomPickupNames=(ClassName="UTGame.UTArmorPickup_Vest",CustomName="Armor +50")
+
 == Source code ==
 Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI
+
+== Appendix ==
+
+=== Pickup classes ===
+Just copy-paste them in the configuration file and fill in the blanks.
+
+CustomPickupNames=(ClassName="UTGameContent.UTWeap_Redeemer_Content",CustomName="")
+
+CustomPickupNames=(ClassName="UTGameContent.UTUDamage",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTBerserk",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTInvulnerability",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTInvisibility",CustomName="")
+CustomPickupNames=(ClassName="UT3Gold.UTSlowField_Content",CustomName="")
+
+CustomPickupNames=(ClassName="UTGameContent.UTPickupFactory_SuperHealth",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTArmorPickup_ShieldBelt",CustomName="")
+CustomPickupNames=(ClassName="UTGame.UTArmorPickup_Helmet",CustomName="")
+CustomPickupNames=(ClassName="UTGame.UTArmorPickup_Thighpads",CustomName="")
+CustomPickupNames=(ClassName="UTGame.UTArmorPickup_Vest",CustomName="")
+
+CustomPickupNames=(ClassName="UTGameContent.UTJumpBoots",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTDeployableEMPMine",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTDeployableEnergyShield",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTDeployableShapedCharge",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTDeployableSlowVolume",CustomName="")
+CustomPickupNames=(ClassName="UTGameContent.UTDeployableSpiderMineTrap",CustomName="")
+
+CustomPickupNames=(ClassName="UT3Gold.UTDeployableLinkGenerator",CustomName="")
+CustomPickupNames=(ClassName="UT3Gold.UTDeployableXRayVolume",CustomName="")

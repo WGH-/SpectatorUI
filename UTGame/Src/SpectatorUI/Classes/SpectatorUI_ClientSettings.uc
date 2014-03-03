@@ -22,6 +22,23 @@ var config float PostPlayerSwitchDelay;
 var config string PickupNotificationPattern;
 var config string RedFlagNotificationPattern, BlueFlagNotificationPattern;
 
+struct CustomPickupName {
+    var string ClassName;
+    var string CustomName;
+};
+
+var config array<CustomPickupName> CustomPickupNames;
+
+function bool LookupCustomPickupName(string ClassName, out string PickupName) {
+    local int i;
+    i = CustomPickupNames.Find('ClassName', ClassName);
+    if (i >= 0) {
+        PickupName = CustomPickupNames[i].CustomName;
+        return true;
+    } 
+    return false;
+}
+
 defaultproperties
 {
     bNotificationBeep=true

@@ -636,6 +636,11 @@ function CloseManual() {
 function string GetPickupName(class<Actor> Clazz) {
     local class<UTItemPickupFactory> IPFClass;
     local class<Inventory> InvClass;
+    local string Res;
+
+    if (Settings.LookupCustomPickupName(Clazz.GetPackageName() $ "." $ Clazz.Name, Res)) {
+        return Res; 
+    }
 
     IPFClass = class<UTItemPickupFactory>(Clazz);
 
