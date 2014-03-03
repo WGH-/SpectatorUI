@@ -9,6 +9,8 @@ class SpectatorUI_ClientSettings extends Object
     perobjectconfig
     config(SpectatorUI);
 
+var config bool bDisableHelp;
+
 var config Name BookmarkModifierButton;
 var config Name ZoomButton;
 var config name BehindViewKey;

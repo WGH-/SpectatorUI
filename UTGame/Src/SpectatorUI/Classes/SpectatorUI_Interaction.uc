@@ -117,7 +117,7 @@ event PostRender(Canvas Canvas) {
 
     // even though SpectatorUI works fine with "temporary" spectators
     // don't show manual unless spectator is totally spectator
-    if (!bShortManualShown && PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator) {
+    if (!bShortManualShown && !Settings.bDisableHelp && PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator) {
         if (OpenManual()) {
             bShortManualShown = true;
         }

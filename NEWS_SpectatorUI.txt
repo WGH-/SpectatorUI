@@ -3,6 +3,7 @@
     * Package name-independent configuration. Even if you visit
       servers with different (future) versions of the mutator, 
       the same configuration will be used.
+    * Config option to dismiss help automatically
 
 02.03.2014 SpectatorUI v2.1
     * First public release
