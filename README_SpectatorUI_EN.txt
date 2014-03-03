@@ -47,16 +47,16 @@ For server administrators, class path is "SpectatorUI_2_1.SpectatorUI_Mut".
 === Exec functions ===
 The mutator exports a couple of exec functions, which you can use in your own binds or in console.
 
-SpectatorUI_SetSpeed <speed> - set camera speed
-SpectatorUI_AddSpeed <speed> - increase camera speed by specified amount (can be negative)
-SpectatorUI_MultiplySpeed <multiplier> - multiplies camera speed by specified amount
-becomespectator - become spectator, if possible
+    SpectatorUI_SetSpeed <speed> - set camera speed
+    SpectatorUI_AddSpeed <speed> - increase camera speed by specified amount (can be negative)
+    SpectatorUI_MultiplySpeed <multiplier> - multiplies camera speed by specified amount
+    becomespectator - become spectator, if possible
 
-SpectatorUI_FollowPowerup <1|0> - automatically jump to players who takes a powerup
-cg_followPowerup <1|0> - same, Quake compatibility
+    SpectatorUI_FollowPowerup <1|0> - automatically jump to players who takes a powerup
+    cg_followPowerup <1|0> - same, Quake compatibility
 
-SpectatorUI_FollowKiller <1|0> - automatically jump to player who frags anyone
-cg_followKiller <1|0> - same, Quake compatibility
+    SpectatorUI_FollowKiller <1|0> - automatically jump to player who frags anyone
+    cg_followKiller <1|0> - same, Quake compatibility
 
 === Config file ===
 ==== Server ====
