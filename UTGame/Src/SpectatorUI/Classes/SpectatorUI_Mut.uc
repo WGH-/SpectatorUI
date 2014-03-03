@@ -321,13 +321,13 @@ function bool IsPickupFactoryInteresting(UTPickupFactory F) {
 
 function int GetCategory(PickupFactory F, out int additional)
 {
-    // 4. Powerups (UD, Berserk)
-    // 3. Super-weapons
+    // 4. Super-weapons
+    // 3. Powerups (UD, Berserk)
     // 2. Armors and health
     // 1. Misc (jump boots, deployables) and everthing else
 
-    if (UTPowerupPickupFactory(F) != None && F.bIsSuperItem) return 4;
-    if (UTWeaponPickupFactory(F) != None && F.bIsSuperItem) return 3;
+    if (UTWeaponPickupFactory(F) != None && F.bIsSuperItem) return 4;
+    if (UTPowerupPickupFactory(F) != None && F.bIsSuperItem) return 3;
     if (UTArmorPickupFactory(F) != None ) {
         additional = UTArmorPickupFactory(F).ShieldAmount;
         return 2;
