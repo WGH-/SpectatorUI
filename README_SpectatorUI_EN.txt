@@ -74,15 +74,26 @@ You can use configuration file to adjust many options to your liking.
 To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add the following lines. Omit it if you don't want to change the default.
 
     [SpectatorUI SpectatorUI_ClientSettings]
-    PlayerSwitchDelay=0.5 ; the amount of time mutator waits before switch to the player
-    PostPlayerSwitchDelay=2.0 ; the amount of time selection menu remains on screen after switching
+    ; the amount of time mutator waits before switch to the player
+    ; can be used to prevent pickup timer abuse
+    PlayerSwitchDelay=0.5  
 
-    BookmarkModifierButton=LeftAlt ; button you need to hold in order to save bookmark
-    ZoomButton=MiddleMouseButton ; button you need to hold in order to change FOV
+    ; the amount of time selection menu remains on screen after switching
+    PostPlayerSwitchDelay=2.0 
+
+    ; button you need to hold in order to save bookmark
+    BookmarkModifierButton=LeftAlt 
+
+    ; button you need to hold in order to change FOV
+    ZoomButton=MiddleMouseButton 
+
     BehindViewKey=Q
 
-    bDisableHelp=false ; if you're already accustomed to the mutator, you might want to dismiss help automatically
-    bNotificationBeep=true ; set to false if you want to suppress notification beep
+    ; if you're already accustomed to the mutator, you might want to dismiss help automatically
+    bDisableHelp=false 
+
+    ; set to false if you want to suppress notification beep
+    bNotificationBeep=true 
 
 == Source code ==
 Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI
