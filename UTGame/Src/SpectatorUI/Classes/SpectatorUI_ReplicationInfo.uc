@@ -14,7 +14,6 @@ var SpectatorUI_Interaction SUI;
 var float ServerTimeDelta;
 var float ServerTimeSeconds;
 
-var bool bFollowPowerup;
 
 // set only on server
 struct PointsOfInterestContainer {
@@ -171,25 +170,7 @@ simulated protected function DemoViewPlayer(PlayerReplicationInfo PRI) {
     DemoRecSpectator(Owner).ClientSetRealViewTarget(PRI);
 }
 
-// extract human-readable pickup name on the client
-simulated function string GetPickupName(class<Actor> Clazz) {
-    local class<UTItemPickupFactory> IPFClass;
-    local class<Inventory> InvClass;
 
-    IPFClass = class<UTItemPickupFactory>(Clazz);
-
-    if (IPFClass != None) {
-        return IPFClass.default.PickupMessage;
-    }
-    InvClass = class<Inventory>(Clazz);
-    if (InvClass != None) {
-        if (InvClass.default.ItemName != "") {
-            return InvClass.default.ItemName;
-        }
-        return InvClass.default.PickupMessage;
-    }
-    return string(Clazz.name);
-}
 
 // the points is, we want to resolve names on the client
 // because they may use different language than server
@@ -220,19 +201,7 @@ function InterestingPickupTaken(Pawn Other, PickupFactory F, Actor Pickup) {
 }
 
 reliable client function ClientInterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplicationInfo Who) {
-    local string Desc;
-
-    Desc = GetPickupName(What); 
-
-    Desc = Desc @ "has been picked up by" @ Who.GetPlayerAlias() $ ".";
-
-    if (bFollowPowerup) {
-        ServerViewPointOfInterest(); 
-    } else {
-        Desc = Desc @ "Press * to jump to that player.";
-    }
-    
-    PlayerController(Owner).ClientMessage(Desc);
+    SUI.InterestingPickupTaken(F, What, Who); 
 }
 
 function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime, int flags) {
@@ -244,7 +213,7 @@ function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime, int flags
 }
 
 reliable client function ClientUpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float ExpectedTime, int flags) {
-    SUI.UpdateRespawnTime(F, GetPickupName(Clazz), i, ExpectedTime, flags);
+    SUI.UpdateRespawnTime(F, Clazz, i, ExpectedTime, flags);
 }
 
 simulated function ViewPointOfInterest() {
@@ -436,22 +405,7 @@ function FlagTaken(UTCTFBase FlagBase, Controller EventInstigator)
 }
 
 reliable client function ClientFlagTaken(byte Team, PlayerReplicationInfo Who) {
-    local string Desc;
-
-    Desc = Who.GetPlayerAlias();
-
-    if (Team == 0) {
-        Desc = Desc @ class'UTCTFMessage'.default.hasBlue;
-    } else {
-        Desc = Desc @ class'UTCTFMessage'.default.hasRed;
-    }
-    if (bFollowPowerup) {
-        ServerViewPointOfInterest();
-    } else {
-        Desc = Desc @ "Press * to jump to that player.";
-    }
-
-    PlayerController(Owner).ClientMessage(Desc);
+    SUI.FlagTaken(Team, Who);
 }
 
 reliable server function ServerSetFollowKiller(bool x)

@@ -37,6 +37,8 @@ var bool bShortManualShown;
 
 var transient bool bZoomButtonHeld;
 
+var bool bFollowPowerup;
+
 var SpectatorUI_ClientSettings Settings;
 
 // if ExpectedTime < 0, these flags give us additional info
@@ -164,7 +166,7 @@ exec function cg_followPowerup(bool x) {
 }
 
 exec function SpectatorUI_FollowPowerup(bool x) {
-    RI.bFollowPowerup = x;
+    bFollowPowerup = x;
 }
 
 exec function cg_followKiller(bool x) {
@@ -630,11 +632,34 @@ function CloseManual() {
     }
 }
 
-function UpdateRespawnTime(PickupFactory F, string PickupName, int i, float ExpectedTime, int flags) {
+// extract human-readable pickup name on the client
+function string GetPickupName(class<Actor> Clazz) {
+    local class<UTItemPickupFactory> IPFClass;
+    local class<Inventory> InvClass;
+
+    IPFClass = class<UTItemPickupFactory>(Clazz);
+
+    if (IPFClass != None) {
+        return IPFClass.default.PickupMessage;
+    }
+    InvClass = class<Inventory>(Clazz);
+    if (InvClass != None) {
+        if (InvClass.default.ItemName != "") {
+            return InvClass.default.ItemName;
+        }
+        return InvClass.default.PickupMessage;
+    }
+    return string(Clazz.name);
+}
+
+function UpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float ExpectedTime, int flags) {
+    local string PickupName;
     while (RespawnTimers.Length - 1 < i) {
         RespawnTimers.Length = RespawnTimers.Length + 1;
         RespawnTimers[RespawnTimers.Length - 1].EstimatedRespawnTime = -1;
     }
+
+    PickupName = GetPickupName(Clazz);
 
     //`log("Updated pickup timer" @ PickupName @ ExpectedTime);
 
@@ -642,6 +667,51 @@ function UpdateRespawnTime(PickupFactory F, string PickupName, int i, float Expe
     RespawnTimers[i].PickupName = PickupName;
     RespawnTimers[i].EstimatedRespawnTime = ExpectedTime;
     RespawnTimers[i].Flags = flags;
+}
+
+function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplicationInfo Who) {
+    local string Desc;
+
+    Desc = GetPickupName(What); 
+    Desc = Desc @ "has been picked up by" @ Who.GetPlayerAlias() $ ".";
+
+    if (bFollowPowerup) {
+        RI.ViewPointOfInterest(); 
+    } else {
+        Desc = Desc @ "Press * to jump to that player.";
+    }
+    
+    PrintNotification(Desc);
+}
+
+function FlagTaken(byte Team, PlayerReplicationInfo Who) {
+    local string Desc;
+
+    Desc = Who.GetPlayerAlias();
+    if (Team == 0) {
+        Desc = Desc @ class'UTCTFMessage'.default.hasBlue;
+    } else {
+        Desc = Desc @ class'UTCTFMessage'.default.hasRed;
+    }
+    if (bFollowPowerup) {
+        RI.ViewPointOfInterest();
+    } else {
+        Desc = Desc @ "Press * to jump to that player.";
+    }
+
+    PrintNotification(Desc);
+}
+
+function PrintNotification(string Message) {
+    local bool bOldBeep;
+    bOldBeep = myHUD.bMessageBeep;
+    if (!Settings.bNotificationBeep) {
+        myHUD.bMessageBeep = false;
+    }
+    ClientMessage(Message);
+    if (!Settings.bNotificationBeep) {
+        myHUD.bMessageBeep = bOldBeep;
+    }
 }
 
 defaultproperties

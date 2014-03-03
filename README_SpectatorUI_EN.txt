@@ -82,6 +82,7 @@ To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add 
     BehindViewKey=Q
 
     bDisableHelp=false ; if you're already accustomed to the mutator, you might want to dismiss help automatically
+    bNotificationBeep=true ; set to false if you want to suppress notification beep
 
 == Source code ==
 Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI

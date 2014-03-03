@@ -10,6 +10,7 @@ class SpectatorUI_ClientSettings extends Object
     config(SpectatorUI);
 
 var config bool bDisableHelp;
+var config bool bNotificationBeep;
 
 var config Name BookmarkModifierButton;
 var config Name ZoomButton;
@@ -20,6 +21,8 @@ var config float PostPlayerSwitchDelay;
 
 defaultproperties
 {
+    bNotificationBeep=true
+
     BookmarkModifierButton=LeftAlt
     ZoomButton=MiddleMouseButton
     BehindViewKey=Q
