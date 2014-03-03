@@ -672,13 +672,20 @@ function UpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float Exp
 function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplicationInfo Who) {
     local string Desc;
 
-    Desc = GetPickupName(What); 
-    Desc = Desc @ "has been picked up by" @ Who.GetPlayerAlias() $ ".";
+    if (Settings.PickupNotificationPattern != "") {
+        Desc = Settings.PickupNotificationPattern;
+    } else {
+        Desc = "`o has been picked up by `s.";
+        if (!bFollowPowerup) {
+            Desc = Desc @ "Press * to jump to that player.";
+        }
+    }
+
+    Desc = Repl(Desc, "`o", GetPickupName(What));
+    Desc = Repl(Desc, "`s", Who.GetPlayerAlias());
 
     if (bFollowPowerup) {
         RI.ViewPointOfInterest(); 
-    } else {
-        Desc = Desc @ "Press * to jump to that player.";
     }
     
     PrintNotification(Desc);
@@ -687,16 +694,26 @@ function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplic
 function FlagTaken(byte Team, PlayerReplicationInfo Who) {
     local string Desc;
 
-    Desc = Who.GetPlayerAlias();
-    if (Team == 0) {
-        Desc = Desc @ class'UTCTFMessage'.default.hasBlue;
+    if (Team == 0 && Settings.RedFlagNotificationPattern != "") {
+        Desc = Settings.RedFlagNotificationPattern;
+    } else if (Team != 0 && Settings.BlueFlagNotificationPattern != "") {
+        Desc = Settings.BlueFlagNotificationPattern;
     } else {
-        Desc = Desc @ class'UTCTFMessage'.default.hasRed;
+        Desc = "`s";
+        if (Team == 0) {
+            Desc = Desc @ class'UTCTFMessage'.default.hasRed;
+        } else {
+            Desc = Desc @ class'UTCTFMessage'.default.hasBlue;
+        }
+        if (!bFollowPowerup) {
+            Desc = Desc @ "Press * to jump to that player.";
+        }
     }
+
+    Desc = Repl(Desc, "`s", Who.GetPlayerAlias());
+
     if (bFollowPowerup) {
         RI.ViewPointOfInterest();
-    } else {
-        Desc = Desc @ "Press * to jump to that player.";
     }
 
     PrintNotification(Desc);

@@ -94,6 +94,15 @@ To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add 
 
     ; set to false if you want to suppress notification beep
     bNotificationBeep=true 
+    
+    ; you can customize pickup notification message here
+    ; `o will be replaced with pickup name,
+    ; `s - with player nickname
+    PickupNotificationPattern=`o picked up by `s 
+
+    ; same with flags
+    RedFlagNotificationPattern=`s took the red flag.
+    BlueFlagNotificationPattern=`s took the blue flag.
 
 == Source code ==
 Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI

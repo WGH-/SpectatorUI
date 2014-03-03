@@ -5,6 +5,7 @@
       the same configuration will be used.
     * Config option to dismiss help automatically
     * Config option to disable notification beep
+    * Config options to customize notification message format
 
 02.03.2014 SpectatorUI v2.1
     * First public release

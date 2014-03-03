@@ -19,6 +19,9 @@ var config name BehindViewKey;
 var config float PlayerSwitchDelay;
 var config float PostPlayerSwitchDelay;
 
+var config string PickupNotificationPattern;
+var config string RedFlagNotificationPattern, BlueFlagNotificationPattern;
+
 defaultproperties
 {
     bNotificationBeep=true
