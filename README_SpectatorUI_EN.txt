@@ -64,22 +64,22 @@ This section is relavant to server administrators willing to use this mutator.
 
 The config file is UTSpectatorUI.ini
 
-[SpectatorUI_2.SpectatorUI_Mut]
-RejoinDelay=15.0 ; seconds player must wait before becoming active again after becoming a spectator
-bPowerupTimers=true ; if true, spectators will know respawn timers for various powerups
+    [SpectatorUI SpectatorUI_ServerSettings]
+    RejoinDelay=15.0 ; seconds player must wait before becoming active again after becoming a spectator
+    bPowerupTimers=true ; if true, spectators will know respawn timers for various powerups
 
 ==== Client ====
 You can use configuration file to adjust many options to your liking.
 
 To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add the following lines. Omit it if you don't want to change the default.
 
-[SpectatorUI_2.SpectatorUI_Interaction]
-PlayerSwitchDelay=0.5 ; the amount of time mutator waits before switch to the player
-PostPlayerSwitchDelay=2.0 ; the amount of time selection menu remains on screen after switching
+    [SpectatorUI SpectatorUI_ClientSettings]
+    PlayerSwitchDelay=0.5 ; the amount of time mutator waits before switch to the player
+    PostPlayerSwitchDelay=2.0 ; the amount of time selection menu remains on screen after switching
 
-BookmarkModifierButton=LeftAlt ; button you need to hold in order to save bookmark
-ZoomButton=MiddleMouseButton ; button you need to hold in order to change FOV
-BehindViewKey=Q
+    BookmarkModifierButton=LeftAlt ; button you need to hold in order to save bookmark
+    ZoomButton=MiddleMouseButton ; button you need to hold in order to change FOV
+    BehindViewKey=Q
 
 == Source code ==
 Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI

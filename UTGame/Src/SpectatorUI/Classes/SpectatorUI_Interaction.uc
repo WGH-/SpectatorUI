@@ -25,13 +25,9 @@ enum ESelectionState {
     SS_PostSelect
 };
 var ESelectionState SelectionInProgress;
-var config float PlayerSwitchDelay;
-var config float PostPlayerSwitchDelay;
+
 var string SelectedPrefix;
 
-var config Name BookmarkModifierButton;
-var config Name ZoomButton;
-var config name BehindViewKey;
 var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
 var array<Name> BookmarkKeys;
@@ -40,6 +36,8 @@ var UIScene ShortManualRef; // reference to the scene containing short manual
 var bool bShortManualShown;
 
 var transient bool bZoomButtonHeld;
+
+var SpectatorUI_ClientSettings Settings;
 
 // if ExpectedTime < 0, these flags give us additional info
 const PICKUPTIMER_WAITINGFORMATCH = 0x1;
@@ -73,6 +71,8 @@ static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorU
     SUI_Interaction.RI = newRI;
     // have to insert it first so it can intercept bound keys
     PC.Interactions.InsertItem(0, SUI_Interaction);
+
+    SUI_Interaction.Settings = new(None, "SpectatorUI") class'SpectatorUI_ClientSettings';
 
     PC.Spawn(class'SpectatorUI_MidgameMenuFixer', PC);    
 
@@ -271,13 +271,13 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                 i = SpeedBinds.Find('Key', Key);
                 if (i != INDEX_NONE) {
                     SpectatorCameraSpeed = default.SpectatorCameraSpeed * GetCameraSpeedMultiplier(SpeedBinds[i].Value);
-                } else if (key == BookmarkModifierButton) {
+                } else if (key == Settings.BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = true;
-                } else if (key == ZoomButton) {
+                } else if (key == Settings.ZoomButton) {
                     bZoomButtonHeld = true; 
                 } else if (Key == 'Multiply') {
                     RI.ViewPointOfInterest();
-                } else if (Key == BehindViewKey) {
+                } else if (Key == Settings.BehindViewKey) {
                     BehindView(); 
                 } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                     BookmarkButtonPressed(Key); 
@@ -312,9 +312,9 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     }
                 }
             } else if (EventType == IE_Released) {
-                if (key == BookmarkModifierButton) {
+                if (key == Settings.BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = false;
-                } else if (key == ZoomButton) {
+                } else if (key == Settings.ZoomButton) {
                     bZoomButtonHeld = false;
                 }
             }
@@ -379,7 +379,7 @@ function PlayerSelect(int increment)
     if (SelectionInProgress == SS_PostSelect) {
         SelectionInProgress = SS_InProgress;
     }
-    SetTimer(PlayerSwitchDelay, false, 'EndPlayerSelect', self);
+    SetTimer(Settings.PlayerSwitchDelay, false, 'EndPlayerSelect', self);
 }
 
 function EndPlayerSelect()
@@ -388,7 +388,7 @@ function EndPlayerSelect()
         SelectionInProgress = SS_PostSelect;
     
         RI.ViewPlayer(PRIs[SelectedPRIIndex]);
-        SetTimer(PostPlayerSwitchDelay, false, 'EndPlayerSelect', self);
+        SetTimer(Settings.PostPlayerSwitchDelay, false, 'EndPlayerSelect', self);
     } else if (SelectionInProgress == SS_PostSelect) {
         SelectionInProgress = SS_None;
         PRIs.Length = 0;
@@ -586,7 +586,7 @@ function BookmarkButtonPressed(Name Key)
             SetRotation(B.Rotation);
             SetFOV(B.FOV);
         } else {
-            ClientMessage("Bookmark" @ Key @ "is not set. Press" @ BookmarkModifierButton $ "+" $ Key @ "to set it.");
+            ClientMessage("Bookmark" @ Key @ "is not set. Press" @ Settings.BookmarkModifierButton $ "+" $ Key @ "to set it.");
         }
     }
 }
@@ -649,13 +649,8 @@ defaultproperties
     OnReceivedNativeInputKey=HandleInputKey
     OnReceivedNativeInputAxis=HandleInptAxis
 
-    PlayerSwitchDelay=0.5
-    PostPlayerSwitchDelay=2.0
     SelectedPrefix=">  "
 
-    BookmarkModifierButton=LeftAlt
-    ZoomButton=MiddleMouseButton
-    BehindViewKey=Q
 
     SpeedBinds.Add((Key=one,Value=0))
     SpeedBinds.Add((Key=two,Value=1))

@@ -1,5 +1,8 @@
 03.03.2014 SpectatorUI v2.2
     * Fixed spectator status not persisting across map changes
+    * Package name-independent configuration. Even if you visit
+      servers with different (future) versions of the mutator, 
+      the same configuration will be used.
 
 02.03.2014 SpectatorUI v2.1
     * First public release

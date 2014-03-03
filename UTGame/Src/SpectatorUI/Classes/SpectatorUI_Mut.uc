@@ -19,8 +19,7 @@ var int TicksToWait;
 const WAITING_FOR_DEPLOYABLE_POLLING_INTERVAL = 1.0;
 var array<PickupFactory> WaitingForDeployablePolling;
 
-var config float RejoinDelay;
-var config bool bPowerupTimers;
+var SpectatorUI_ServerSettings Settings;
 
 //function InitMutator(string Options, out string ErrorMessage) {
 //    super.InitMutator(Options, ErrorMessage);
@@ -32,6 +31,8 @@ function PostBeginPlay() {
     super.PostBeginPlay();
 
     if (bDeleteMe) return;
+
+    Settings = new(None, "SpectatorUI") class'SpectatorUI_ServerSettings';
 
     // delay until the next tick for two reasons:
     // 1. until AllNavigationPoints becomes avaiable
@@ -132,7 +133,7 @@ function bool AllowBecomeActivePlayer(PlayerController PC) {
     if (PC.PlayerReplicationInfo != None && !PC.PlayerReplicationInfo.bAdmin) {
         foreach RIs(RI) {
             if (RI.Owner == PC) {
-                if (RI.LastBecomeSpectatorTime >= 0 && WorldInfo.TimeSeconds - RI.LastBecomeSpectatorTime < RejoinDelay) {
+                if (RI.LastBecomeSpectatorTime >= 0 && WorldInfo.TimeSeconds - RI.LastBecomeSpectatorTime < Settings.RejoinDelay) {
                     return false;
                 }
                 break;
@@ -234,7 +235,7 @@ function UpdateRespawnTime(
     local UTPickupFactory UTPF;
     local int flags;
 
-    if (!bPowerupTimers) return;
+    if (!Settings.bPowerupTimers) return;
         
     EstimatedRespawnTime = WorldInfo.TimeSeconds;
     
@@ -509,7 +510,4 @@ function AttachSequenceObjectsToPickups() {
 defaultproperties
 {
     bExportMenuData=false
-    
-    RejoinDelay=15
-    bPowerupTimers=true
 }
