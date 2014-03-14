@@ -381,7 +381,11 @@ function PlayerSelect(int increment)
     if (SelectionInProgress == SS_PostSelect) {
         SelectionInProgress = SS_InProgress;
     }
-    SetTimer(Settings.PlayerSwitchDelay, false, 'EndPlayerSelect', self);
+    if (Settings.PlayerSwitchDelay > 0) {
+        SetTimer(Settings.PlayerSwitchDelay, false, 'EndPlayerSelect', self);
+    } else {
+        EndPlayerSelect();
+    }
 }
 
 function EndPlayerSelect()
@@ -390,7 +394,11 @@ function EndPlayerSelect()
         SelectionInProgress = SS_PostSelect;
     
         RI.ViewPlayer(PRIs[SelectedPRIIndex]);
-        SetTimer(Settings.PostPlayerSwitchDelay, false, 'EndPlayerSelect', self);
+        if (Settings.PostPlayerSwitchDelay > 0) {
+            SetTimer(Settings.PostPlayerSwitchDelay, false, 'EndPlayerSelect', self);
+        } else {
+            EndPlayerSelect();
+        }
     } else if (SelectionInProgress == SS_PostSelect) {
         SelectionInProgress = SS_None;
         PRIs.Length = 0;
