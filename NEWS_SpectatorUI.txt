@@ -1,5 +1,6 @@
 XX.XX.2014 SpectatorUI v2.3
     * Setting menu delays to zero no longer makes them infinite.
+    * Fixed typo in the "help menu"
 
 03.03.2014 SpectatorUI v2.2
     * Fixed spectator status not persisting across map changes
