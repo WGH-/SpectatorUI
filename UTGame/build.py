@@ -60,10 +60,9 @@ def hide_file(filename):
 
 @contextlib.contextmanager
 def hide_files(filenames):
-    managers = map(hide_file, filenames)
-
     with contextlib.ExitStack() as stack:
-        map(stack.enter_context, managers)
+        for filename in filenames:
+            stack.enter_context(hide_file(filename))
         yield
 
 def build(mods, files_to_hide=[], merges=[], cooking=[]):
