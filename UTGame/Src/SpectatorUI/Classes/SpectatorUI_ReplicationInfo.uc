@@ -365,6 +365,12 @@ reliable server function ServerSpectate() {
         G.BroadcastLocalizedMessage(G.GameMessageClass, 14, PRI);
 
         ClientBecameSpectator();
+
+        if (UTPlayerController(PC) != None && UTPlayerController(PC).VoteRI != None && UTPlayerController(PC).VoteRI.bDeleteMe) {
+            // hack that prevents the bug where voting is unavailable to players
+            // that do spectate-join cycle without GC running in between
+            UTPlayerController(PC).VoteRI = None;
+        }
     } else {
         PC.ReceiveLocalizedMessage(G.GameMessageClass, 12);
     }
