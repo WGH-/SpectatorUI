@@ -1,9 +1,9 @@
-SpectatorUI version 2.2
+SpectatorUI version 2.3
 
 This mutator greatly enhances spectator's convenience.
 
 Author: WGH, wgh@torlan.ru
-03.03.2014
+18.03.2014
 
 == Features ==
  * Works offline, online and in server-recorded demos (provided mutator was active at the time of recording)
@@ -18,12 +18,12 @@ Author: WGH, wgh@torlan.ru
  * Timer for powerups, armor pickups and super weapons (Kismet-activated pickup factories are also supported)
 
 == Installation ==
-Contents of Script directory goes anywhere in \Documents\My Games\Unreal Tournament 3\UTGame\Published\CookedPC.
-Contents of Config directory goes in \Documents\My Games\Unreal Tournament 3\UTGame\Config
+Contents of Script directory go anywhere in \Documents\My Games\Unreal Tournament 3\UTGame\Published\CookedPC.
+Contents of Config directory go in \Documents\My Games\Unreal Tournament 3\UTGame\Config
 
 Once it's done, mutator will be listed in the usual mutator list.
 
-For server administrators, class path is "SpectatorUI_2_2.SpectatorUI_Mut".
+For server administrators, class path is "SpectatorUI_2_3.SpectatorUI_Mut".
 
 == Known bugs ==
  * Pickup timers don't always work correctly with some items whose
