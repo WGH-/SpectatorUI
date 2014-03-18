@@ -1,4 +1,4 @@
-XX.XX.2014 SpectatorUI v2.3
+18.03.2014 SpectatorUI v2.3
     * Fixed voting being unavailable to players who undergo 
       spectate-join cycle with short delay (without GC running inbetween)
     * Setting menu delays to zero no longer makes them infinite.
