@@ -512,7 +512,7 @@ function RenderPickupTimers(Canvas C)
     HiddenColor.A = VisibleColor.A;
 
     C.Reset();
-    C.Font = HUD.GetFontSizeIndex(0);
+    C.Font = HUD.GetFontSizeIndex(Settings.bLargerPickupTimers ? 1 : 0);
 
     C.SetOrigin(14.0, C.ClipY / 8);
 

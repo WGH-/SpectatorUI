@@ -94,6 +94,10 @@ To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add 
 
     ; set to false if you want to suppress notification beep
     bNotificationBeep=true 
+
+    ; set to true if you want pickup timers to be rendered in larger font
+    ; useful for video streaming, where video quality might be terrible
+    bLargerPickupTimers=false
     
     ; you can customize pickup notification message here
     ; `o will be replaced with pickup name,
