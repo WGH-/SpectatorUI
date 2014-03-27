@@ -414,7 +414,7 @@ function OnPickupFactoryRelatedSeqActToggleActivate(SeqAct_Delegate SeqAct)
     }
 }
 
-function HookKismetToggleActions() {
+function HookKismetToggleActions(Sequence FakeParent) {
     local array<SequenceObject> SeqObjects;
     local SequenceObject SO;
 
@@ -448,13 +448,11 @@ function HookKismetToggleActions() {
             OutputLink.LinkedOp = SAD;
             OutputLink.InputLinkIdx = 0;
             SA.OutputLinks[0].Links.AddItem(OutputLink);
-            
-            ModifyParentSequence(SAD, WorldInfo.GetGameSequence());
+
+            ModifyParentSequence(SAD, FakeParent);
         }
     }
 }
-
-   
 
 function AttachSequenceObjectsToPickups() {
     local UTPickupFactory Factory;
@@ -470,6 +468,9 @@ function AttachSequenceObjectsToPickups() {
     `log("Attaching sequence objects to pickup factories...");
     
     FakeParent = WorldInfo.GetGameSequence();
+    if (FakeParent == None) {
+        FakeParent = new(None) class'Sequence';
+    }
     
     foreach WorldInfo.AllNavigationPoints(class'UTPickupFactory', Factory) {
         if (!IsPickupFactoryInteresting(Factory)) continue;
@@ -504,7 +505,7 @@ function AttachSequenceObjectsToPickups() {
         Node.GeneratedEvents.AddItem(ONE);
     }
 
-    HookKismetToggleActions();
+    HookKismetToggleActions(FakeParent);
 }
 
 defaultproperties
