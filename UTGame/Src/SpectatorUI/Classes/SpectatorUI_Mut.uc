@@ -428,7 +428,9 @@ function HookKismetToggleActions(Sequence FakeParent) {
 
     local array<Object> Args;
 
-    WorldInfo.GetGameSequence().FindSeqObjectsByClass(class'SeqAct_Toggle', true, SeqObjects);
+    if (WorldInfo.GetGameSequence() != None) {
+        WorldInfo.GetGameSequence().FindSeqObjectsByClass(class'SeqAct_Toggle', true, SeqObjects);
+    }
 
     foreach SeqObjects(SO) {
         SA = SequenceAction(SO);
