@@ -24,6 +24,7 @@ struct PointsOfInterestContainer {
 var PointsOfInterestContainer PointsOfInterest;
 var SpectatorUI_Mut Mut;
 var bool bTimeReplicated;
+var bool bOwnerReplicated;
 
 var bool bFollowKiller;
 
@@ -73,6 +74,7 @@ simulated event ReplicatedEvent(name VarName)
 
     if (VarName == 'Owner_' && Owner == None) {
         SetOwner(Owner_);
+        ServerOwnerReady();
         if (WorldInfo.NetMode != NM_DedicatedServer) {
             TryAttachInteraction();
         }
@@ -96,11 +98,21 @@ simulated event PostBeginPlay() {
         if (PlayerController(Owner).IsLocalPlayerController()) {
             ServerTimeDelta = 0; // it's always zero for local players
             TryAttachInteraction();
+            
+            ServerOwnerReady();
         } else {
             Owner_ = Owner;
+            if (DemoRecSpectator(Owner) != None) {
+                ServerOwnerReady();
+            }
             // and continue from ReplicatedEvent
         }
     }
+}
+
+reliable server function ServerOwnerReady() {
+    bOwnerReplicated = true;
+    Mut.UpdateAllRespawnTimesFor(self);
 }
 
 function NotifyBecomeSpectator() {
@@ -207,6 +219,7 @@ reliable client function ClientInterestingPickupTaken(PickupFactory F, class<Act
 function UpdateRespawnTime(PickupFactory F, int i, float ExpectedTime, int flags) {
     // important check, again
     if (!Owner.IsInState('Spectating')) return;
+    if (!bOwnerReplicated) return;
     
     TryReplicateTimeDelta();
     ClientUpdateRespawnTime(F, GetPickupClass(F), i, ExpectedTime, flags);
