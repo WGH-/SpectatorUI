@@ -310,10 +310,6 @@ static function ModifyParentSequence(SequenceObject Seq, SequenceObject NewParen
 function bool IsPickupFactoryInteresting(UTPickupFactory F) {
     local bool bBigGameType;
 
-    // if it's enabled by means of kismet,
-    // there's no defined respawn timer
-    if (F.IsInState('SleepInfinite')) return false;
-
     if (F.bIsDisabled) return false;
     if (F.bIsSuperItem) return true;
     
