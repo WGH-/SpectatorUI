@@ -104,6 +104,11 @@ event PostRender(Canvas Canvas) {
     
     super.PostRender(Canvas);
 
+    if (RI == None || RI.bDeleteMe) {
+        Interactions.RemoveItem(self);
+        return;
+    }
+
     HUD = UTHUD(myHUD);
     if (HUD == None || RI == None) return;
 
