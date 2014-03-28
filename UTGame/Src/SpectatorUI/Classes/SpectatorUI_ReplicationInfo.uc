@@ -106,6 +106,12 @@ simulated function Init() {
         } else {
             Owner_ = Owner;
             if (DemoRecSpectator(Owner) != None) {
+                if (Owner.GetStateName() == Owner.Class.Name) {
+                    // DemoRecSpectator isn't ready yet
+                    // try again later
+                    SetTimer(0.01, false, 'Init');
+                    return;
+                }
                 ServerOwnerReady();
             }
             // and continue from ReplicatedEvent
