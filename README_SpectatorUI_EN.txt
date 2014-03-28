@@ -67,6 +67,9 @@ The config file is UTSpectatorUI.ini
     [SpectatorUI SpectatorUI_ServerSettings]
     RejoinDelay=15.0 ; seconds player must wait before becoming active again after becoming a spectator
     bPowerupTimers=true ; if true, spectators will know respawn timers for various powerups
+    bEnableBecomeSpectator=true ; if true, players will be able to become spectators at all
+                                ; might make sense to disable it if you're using another mutator
+                                ; that provides this functionality
 
 ==== Client ====
 You can use configuration file to adjust many options to your liking.

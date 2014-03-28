@@ -9,18 +9,23 @@ class SpectatorUI_ReplicationInfo extends ReplicationInfo;
 
 var repnotify Actor Owner_;
 
-// set only on clients
-var SpectatorUI_Interaction SUI;
-var float ServerTimeDelta;
-var float ServerTimeSeconds;
-
-
-// set only on server
 struct PointsOfInterestContainer {
     var Actor Actors[3];
     var int Ptr; // current pos 
     var int ReadPtr;
 };
+
+struct ServerClientSettings {
+    var bool bEnableBecomeSpectator;
+};
+
+// set only on clients
+var SpectatorUI_Interaction SUI;
+var float ServerTimeDelta;
+var float ServerTimeSeconds;
+var ServerClientSettings Settings;
+
+// set only on server
 var PointsOfInterestContainer PointsOfInterest;
 var SpectatorUI_Mut Mut;
 var bool bTimeReplicated;
@@ -91,10 +96,8 @@ simulated function TryAttachInteraction() {
     }
 }
 
-simulated event PostBeginPlay() {
-    super.PostBeginPlay(); 
-
-    if (Role == ROLE_Authority) {
+simulated function Init() {
+     if (Role == ROLE_Authority) {
         if (PlayerController(Owner).IsLocalPlayerController()) {
             ServerTimeDelta = 0; // it's always zero for local players
             TryAttachInteraction();
@@ -107,12 +110,23 @@ simulated event PostBeginPlay() {
             }
             // and continue from ReplicatedEvent
         }
-    }
+    }  
 }
 
 reliable server function ServerOwnerReady() {
+    local ServerClientSettings NewSettings;
+
     bOwnerReplicated = true;
+    
+    NewSettings.bEnableBecomeSpectator = Mut.Settings.bEnableBecomeSpectator;
+    ClientUpdateSettings(NewSettings);
+
     Mut.UpdateAllRespawnTimesFor(self);
+}
+
+reliable client function ClientUpdateSettings(ServerClientSettings NewSettings) {
+    Settings = NewSettings;
+    SUI.SettingsUpdated(); 
 }
 
 function NotifyBecomeSpectator() {

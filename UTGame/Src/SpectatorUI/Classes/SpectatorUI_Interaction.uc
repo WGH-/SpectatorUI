@@ -76,7 +76,6 @@ static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorU
 
     SUI_Interaction.Settings = new(None, "SpectatorUI") class'SpectatorUI_ClientSettings';
 
-    PC.Spawn(class'SpectatorUI_MidgameMenuFixer', PC);    
 
     return SUI_Interaction;
 }
@@ -152,9 +151,6 @@ event PostRender(Canvas Canvas) {
         RenderZoomUI(Canvas);
     }
     
-}
-exec function BecomeSpectator() {
-    Spectate();
 }
 
 function Spectate() {
@@ -637,6 +633,13 @@ function CloseManual() {
         if (SC.CloseScene(ShortManualRef)) {
             ShortManualRef = None;
         }
+    }
+}
+
+function SettingsUpdated() {
+    if (RI.Settings.bEnableBecomeSpectator) {
+        Interactions.InsertItem(0, new(self) class'SpectatorUI_Interaction_Spectate');
+        Spawn(class'SpectatorUI_MidgameMenuFixer', Outer);    
     }
 }
 

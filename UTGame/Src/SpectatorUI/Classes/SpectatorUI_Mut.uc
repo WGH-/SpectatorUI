@@ -55,6 +55,7 @@ function bool CheckReplacement(Actor Other) {
         RI = Spawn(class'SpectatorUI_ReplicationInfo', Other);
         RI.Mut = self;
         RIs.AddItem(RI);
+        RI.Init();
 
         // since it's not properly initialized yet
         // delay the call for one tick
@@ -70,6 +71,7 @@ function NotifyLogin(Controller NewPlayer) {
         RI = Spawn(class'SpectatorUI_ReplicationInfo', NewPlayer);
         RI.Mut = self;
         RIs.AddItem(RI);
+        RI.Init();
         
         // XXX what about duel players going to queue?
         if (NewPlayer.PlayerReplicationInfo.bOnlySpectator) {

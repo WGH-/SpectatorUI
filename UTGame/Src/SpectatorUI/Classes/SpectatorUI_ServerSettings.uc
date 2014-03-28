@@ -11,9 +11,11 @@ class SpectatorUI_ServerSettings extends Object
 
 var config float RejoinDelay;
 var config bool bPowerupTimers;
+var config bool bEnableBecomeSpectator;
 
 defaultproperties
 {
     RejoinDelay=15
     bPowerupTimers=true
+    bEnableBecomeSpectator=true
 }
