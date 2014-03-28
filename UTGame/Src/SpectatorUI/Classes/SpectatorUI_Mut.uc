@@ -37,7 +37,9 @@ function PostBeginPlay() {
     // delay until the next tick for two reasons:
     // 1. until AllNavigationPoints becomes avaiable
     // 2. to give other mutators chance to disable pickups, if they wish so
-    SetTimer(0.001, false, 'AttachSequenceObjectsToPickups');
+    if (Settings.bPowerupTimers) {
+        SetTimer(0.001, false, 'AttachSequenceObjectsToPickups');
+    }
 
     GR = Spawn(class'SpectatorUI_GameRules');
     GR.Mut = self;
@@ -156,12 +158,16 @@ function ScoreKill(Controller Killer, Controller Killed) {
 }
 
 function DelayedUpdateRespawnTimesEverything(int Ticks) {
+    if (!Settings.bPowerupTimers) return;
+
     TicksToWait = Max(Ticks, TicksToWait);
     bPendingUpdateAll = true;
     Enable('Tick');
 }
 
 function DelayedUpdateRespawnTime(int Ticks, PickupFactory F) {
+    if (!Settings.bPowerupTimers) return;
+
     TicksToWait = Max(Ticks, TicksToWait);
     if (PendingUpdates.Find(F) == INDEX_NONE) {
         PendingUpdates.AddItem(F);
@@ -205,6 +211,8 @@ function MatchStarting() {
 
 function OnPickupStatusChange(PickupFactory F, Pawn EventInstigator) {
     local SpectatorUI_ReplicationInfo RI;
+    
+    if (!Settings.bPowerupTimers) return;
 
     if (EventInstigator != None) {
         // taken
