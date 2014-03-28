@@ -473,7 +473,7 @@ function AttachSequenceObjectsToPickups() {
 
     local Sequence FakeParent;
     
-    `log("Attaching sequence objects to pickup factories...");
+    `log("Attaching sequence objects to pickup factories...",, 'SpectatorUI');
     
     FakeParent = WorldInfo.GetGameSequence();
     if (FakeParent == None) {
@@ -494,7 +494,7 @@ function AttachSequenceObjectsToPickups() {
         // push update to existing spectators, though it's unlikely there are any
         UpdateRespawnTime(Factory, WatchedPickupFactories.Length - 1);
 
-        `log("Attached" @ PSC @ "to" @ Factory);
+        `log("Attached" @ PSC @ "to" @ Factory,, 'SpectatorUI');
     }
 
     foreach WorldInfo.AllNavigationPoints(class'UTCTFBase', UTCTFBase) {
