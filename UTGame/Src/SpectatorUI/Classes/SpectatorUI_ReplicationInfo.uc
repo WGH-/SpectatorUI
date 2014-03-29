@@ -358,6 +358,7 @@ reliable server function ServerSpectate() {
         G.NumSpectators < G.MaxSpectators &&
         G.GameReplicationInfo.bMatchHasBegun &&
         !PC.IsInState('RoundEnded') &&
+        Mut.Settings.bEnableBecomeSpectator && 
         (G.BaseMutator == None || G.BaseMutator.AllowBecomeSpectator(PC))
         )
     {
