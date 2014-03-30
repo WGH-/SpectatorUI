@@ -4,6 +4,7 @@ XX.03.2014 SpectatorUI v2.4
     * Fixed race condition in replication that caused pickup timers 
       to not be available sometimes.
     * Added server option to disable "become spectator" functionality.
+    * Added small shadow to text of pickup timers (makes them more readable).
 
 
 18.03.2014 SpectatorUI v2.3

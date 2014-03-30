@@ -526,11 +526,7 @@ function RenderPickupTimers(Canvas C)
             continue;
         }
 
-        if (LP.GetActorVisibility(RespawnTimers[i].PickupFactory)) {
-            C.DrawColor = VisibleColor;
-        } else {
-            C.DrawColor = HiddenColor;
-        }
+ 
     
         // add 1.0 because I want it to respawn when timer hits exactly zero
         SecondsLeft = (RespawnTimers[i].EstimatedRespawnTime - (WorldInfo.TimeSeconds - RI.ServerTimeDelta)) / WorldInfo.TimeDilation + 1.0;
@@ -547,8 +543,29 @@ function RenderPickupTimers(Canvas C)
         }
 
         s = s $ "  ";
-
+        
         C.TextSize(s, XL, YL);
+
+        // draw shadow
+        C.DrawColor = HUD.BlackColor;
+
+        C.CurY = C.CurY + 1;
+    
+        C.CurX = FirstColumnSize - XL + 1;
+        C.DrawTextClipped(s);
+        
+        C.CurX = FirstColumnSize + 1;
+        C.DrawTextClipped(RespawnTimers[i].PickupName);
+        
+        C.CurY = C.CurY - 1;
+        
+        // draw counter itself
+        if (LP.GetActorVisibility(RespawnTimers[i].PickupFactory)) {
+            C.DrawColor = VisibleColor;
+        } else {
+            C.DrawColor = HiddenColor;
+        }
+
         C.CurX = FirstColumnSize - XL;
         C.DrawTextClipped(s);
 
