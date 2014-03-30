@@ -7,7 +7,13 @@ it under the terms of the Open Unreal Mod License version 1.1.
 */
 class SpectatorUI_ReplicationInfo extends ReplicationInfo;
 
-var repnotify Actor Owner_;
+// resynch time every this seconds
+const TIME_SYNCH_INTERVAL = 30.0;
+
+// force additional synch after this many seconds
+// to avoid connection saturation and other shit
+const INITIAL_TIME_SYNCH_RETRY_DELAY = 2.5;
+
 
 struct PointsOfInterestContainer {
     var Actor Actors[3];
@@ -22,16 +28,18 @@ struct ServerClientSettings {
 // set only on clients
 var SpectatorUI_Interaction SUI;
 var float ServerTimeDelta;
-var float ServerTimeSeconds;
 var ServerClientSettings Settings;
+var repnotify Actor Owner_;
 
 // set only on server
 var PointsOfInterestContainer PointsOfInterest;
 var SpectatorUI_Mut Mut;
 var bool bTimeReplicated;
 var bool bOwnerReplicated;
-
 var bool bFollowKiller;
+
+// set on both
+var float ServerTimeSeconds; // time of last update
 
 replication {
     if (bNetInitial)
@@ -128,6 +136,8 @@ reliable server function ServerOwnerReady() {
     ClientUpdateSettings(NewSettings);
 
     Mut.UpdateAllRespawnTimesFor(self);
+
+    SetTimer(INITIAL_TIME_SYNCH_RETRY_DELAY * (1.0 + FRand()), false, 'ForceReplicateTimeDelta'); 
 }
 
 reliable client function ClientUpdateSettings(ServerClientSettings NewSettings) {
@@ -138,8 +148,6 @@ reliable client function ClientUpdateSettings(ServerClientSettings NewSettings) 
 function NotifyBecomeSpectator() {
     if (PlayerController(Owner).IsLocalPlayerController()) {
         ServerTimeDelta = 0; // it's always zero for local players
-    } else {
-        TryReplicateTimeDelta();
     }
 
     Mut.UpdateAllRespawnTimesFor(self);
@@ -150,13 +158,26 @@ function NotifyBecomeActive() {
     ClearTimer('TryReplicateTimeDelta');
 }
 
+function ForceReplicateTimeDelta() {
+    bTimeReplicated = false;
+    TryReplicateTimeDelta();
+}
+
 function TryReplicateTimeDelta() {
-    if (IsTimerActive('TryReplicateTimeDelta') || bTimeReplicated) {
+    if (IsTimerActive('TryReplicateTimeDelta')) {
         return;
+    }
+    if (bTimeReplicated) {
+        if (WorldInfo.TimeSeconds - ServerTimeSeconds > TIME_SYNCH_INTERVAL) {
+            bTimeReplicated = false;
+        } else {
+            return;
+        }
     }
 
     //`log("Trying to replicate server time" @ WorldInfo.TimeSeconds);
-    ClientReplicateTimeDelta(WorldInfo.TimeSeconds);
+    ServerTimeSeconds = WorldInfo.TimeSeconds;
+    ClientReplicateTimeDelta(ServerTimeSeconds);
 
     if (DemoRecSpectator(Owner) != None) {
         bTimeReplicated = true;
