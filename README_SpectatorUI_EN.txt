@@ -1,9 +1,9 @@
-SpectatorUI version 2.3
+SpectatorUI version 2.4
 
 This mutator greatly enhances spectator's convenience.
 
 Author: WGH, wgh@torlan.ru
-18.03.2014
+31.03.2014
 
 == Features ==
  * Works offline, online and in server-recorded demos (provided mutator was active at the time of recording)
@@ -23,7 +23,7 @@ Contents of Config directory go in \Documents\My Games\Unreal Tournament 3\UTGam
 
 Once it's done, mutator will be listed in the usual mutator list.
 
-For server administrators, class path is "SpectatorUI_2_3.SpectatorUI_Mut".
+For server administrators, class path is "SpectatorUI_2_4.SpectatorUI_Mut".
 
 == Known bugs ==
  * Pickup timers don't always work correctly with some items whose

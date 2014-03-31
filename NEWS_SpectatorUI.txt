@@ -1,4 +1,4 @@
-XX.03.2014 SpectatorUI v2.4
+31.03.2014 SpectatorUI v2.4
     * Fixed server crash on maps that don't have the default Kismet 
       sequence (DM-Flustered-LE and WAR-LakeSide are among them).
     * Fixed race condition in replication that caused pickup timers 
