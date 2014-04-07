@@ -439,6 +439,7 @@ function RenderPlayerList(Canvas C)
     local LinearColor LC;
     local float XL, YL;
     local vector2d POS;
+    local float OldClipX;
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
     
@@ -452,6 +453,7 @@ function RenderPlayerList(Canvas C)
     POS.x += 28 * HUD.ResolutionScale; // XXX magic constant = bad
 
     C.SetOrigin(0.0, C.ClipY / 6);
+    OldClipX = C.ClipX;
     C.ClipX = GetLongestPlayerListEntry(C) + 2 * POS.x;
 
     C.SetPos(0.0, 0.0);
@@ -487,6 +489,8 @@ function RenderPlayerList(Canvas C)
         C.SetPos(POS.x, Index * YL);
         C.DrawTextClipped(GetPlayerString(PRI)); 
     }
+
+    C.ClipX = OldClipX;
 }
 
 function RenderPickupTimers(Canvas C)
@@ -545,21 +549,7 @@ function RenderPickupTimers(Canvas C)
         s = s $ "  ";
         
         C.TextSize(s, XL, YL);
-
-        // draw shadow
-        C.DrawColor = HUD.BlackColor;
-
-        C.CurY = C.CurY + 1;
-    
-        C.CurX = FirstColumnSize - XL + 1;
-        C.DrawTextClipped(s);
         
-        C.CurX = FirstColumnSize + 1;
-        C.DrawTextClipped(RespawnTimers[i].PickupName);
-        
-        C.CurY = C.CurY - 1;
-        
-        // draw counter itself
         if (LP.GetActorVisibility(RespawnTimers[i].PickupFactory)) {
             C.DrawColor = VisibleColor;
         } else {
@@ -567,10 +557,10 @@ function RenderPickupTimers(Canvas C)
         }
 
         C.CurX = FirstColumnSize - XL;
-        C.DrawTextClipped(s);
+        DrawTextClippedWithShadow(C, s);
 
         C.CurX = FirstColumnSize;
-        C.DrawTextClipped(RespawnTimers[i].PickupName);
+        DrawTextClippedWithShadow(C, RespawnTimers[i].PickupName);
         C.CurY += YL;
     }
 }
@@ -596,6 +586,24 @@ function RenderZoomUI(Canvas C)
     C.SetPos(POS.x, POS.y);
     C.DrawTextClipped("FOV:" @ Round(FOVAngle) @ "degrees");
 }
+
+final function DrawTextClippedWithShadow(Canvas C, string S, float Offset=2.0) {    
+    local Color SavedColor;
+
+    Offset = Offset * UTHUD(myHUD).ResolutionScale;
+
+    SavedColor = C.DrawColor;
+    
+    C.CurX = C.CurX + Offset;
+    C.CurY = C.CurY + Offset;
+    C.SetDrawColor(0, 0, 0);
+    C.DrawTextClipped(s);
+    
+    C.CurX = C.CurX - Offset;
+    C.CurY = C.CurY - Offset;
+    C.DrawColor = SavedColor;
+    C.DrawTextClipped(s);
+}   
 
 function BookmarkButtonPressed(Name Key)
 {
