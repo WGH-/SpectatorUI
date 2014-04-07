@@ -443,15 +443,20 @@ function ScoreKill(Controller Killer, Controller Killed)
         return;
     }
 
-    if (bFollowKiller) {
-         ViewPlayer(Killer.PlayerReplicationInfo);
-    } else if (DemoRecSpectator(Owner) != None) {
+    if (DemoRecSpectator(Owner) != None) {
         DemoScoreKill(Killer.PlayerReplicationInfo, Killed.PlayerReplicationInfo);
+    } else {
+        RealScoreKill(Killer.PlayerReplicationInfo, Killed.PlayerReplicationInfo);
     }
+
 }
 
 reliable demorecording function DemoScoreKill(PlayerReplicationInfo Killer, PlayerReplicationInfo Killed) {
-    if (bFollowKiller) {
+    RealScoreKill(Killer, Killed);
+}
+
+simulated function RealScoreKill(PlayerReplicationInfo Killer, PlayerReplicationInfo Killed) {
+    if (Killed == PlayerController(Owner).RealViewTarget) {
         ViewPlayer(Killer);
     }
 }
