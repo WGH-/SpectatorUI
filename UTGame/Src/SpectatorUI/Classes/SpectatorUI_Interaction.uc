@@ -155,7 +155,8 @@ event PostRender(Canvas Canvas) {
     if (bZoomButtonHeld) {
         RenderZoomUI(Canvas);
     }
-    
+
+    RenderNowViewing(Canvas);
 }
 
 function Spectate() {
@@ -604,6 +605,43 @@ final function DrawTextClippedWithShadow(Canvas C, string S, float Offset=2.0) {
     C.DrawColor = SavedColor;
     C.DrawTextClipped(s);
 }   
+
+function RenderNowViewing(Canvas C) {
+    local PlayerReplicationInfo TargetPRI;
+    local float XL, YL;
+    local string s;
+
+    if (bBehindView) {
+        // in third person mode, game already handles that
+        // see UTHUD::DrawGameHud
+        return;
+    }
+
+    TargetPRI = RealViewTarget;
+
+    if (TargetPRI == None) return;
+
+    C.Reset();
+    C.SetOrigin(C.ClipX - 20.0, C.ClipY / 5.0 * 3.0);
+    C.Font = myHUD.GetFontSizeIndex(2);
+    C.SetDrawColor(255, 255, 0);
+
+    s = "Now viewing";
+    C.TextSize(s, XL, YL);
+    C.CurX = -XL;
+    DrawTextClippedWithShadow(C, s);
+
+    C.CurY += YL;
+
+    C.Font = myHUD.GetFontSizeIndex(3);
+    s = TargetPRI.GetPlayerAlias();
+    if (UTPlayerReplicationInfo(TargetPRI) != None && UTPlayerReplicationInfo(TargetPRI).ClanTag != "") {
+        s = "[" $ UTPlayerReplicationInfo(TargetPRI).ClanTag $ "]" $ s;
+    }
+    C.TextSize(s, XL, YL);
+    C.CurX = -XL;
+    DrawTextClippedWithShadow(C, s);
+}
 
 function BookmarkButtonPressed(Name Key)
 {

@@ -1,6 +1,7 @@
 XX.04.2014 SpectatorUI v2.5
     * Follow killer mode now changes players only if killer kills POV.
       It used to change it every time someone kills anyone on the server.
+    * Added "now viewing X" text when spectating from 1st person camera.
 
 31.03.2014 SpectatorUI v2.4
     * Fixed server crash on maps that don't have the default Kismet 
