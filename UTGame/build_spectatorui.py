@@ -8,7 +8,7 @@ import build
 import unreal_package
 import unreal_bytecode
 
-VERSION = "2_4"
+VERSION = "2_5"
 PACKAGE_NAME = "SpectatorUI_" + VERSION
 
 def patch_bytecode(bytecode):
