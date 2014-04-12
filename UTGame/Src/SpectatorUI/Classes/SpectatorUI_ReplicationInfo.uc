@@ -506,8 +506,7 @@ reliable protected server function ServerSetUnattendedMode(bool x) {
 protected function UpdateUnattendedMode() {
     if (!bUnattendedMode || !Owner.IsInState('Spectating')) {
         ClearTimer('UnattendedTimer');
-    }
-    if (bUnattendedMode) {
+    } else {
         UnattendedTimer();
         SetTimer(1.0, true, 'UnattendedTimer');
     }
@@ -536,7 +535,7 @@ function UnattendedTimer() {
         // try to find anyone to watch
         PRI = GetBestPlayer();
         if (PRI != None) {
-            PlayerController(Owner).ClientMessage("Switching view target to the best player. Type 'SpectatorUI_UnattendedMode 0' to disable unattended mode.");
+            PlayerController(Owner).ClientMessage("Switching view target. Type 'SpectatorUI_UnattendedMode 0' to disable unattended mode.");
             ViewPlayer(PRI);
         }
     }
