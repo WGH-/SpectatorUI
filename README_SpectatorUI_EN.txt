@@ -42,6 +42,7 @@ For server administrators, class path is "SpectatorUI_2_5.SpectatorUI_Mut".
  * Alt + NumPad number - save bookmark
  * NumPad number - load previously saved bookmark
  * NumPad Multiply (*) - jump to the player that caused notification 
+ * Q - Toggle first person/third person view
 
 == Customization == 
 === Exec functions ===
@@ -117,6 +118,11 @@ To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add 
     ; full list of pickup classes included in stock game
     ; is listed in the appendix
     CustomPickupNames=(ClassName="UTGame.UTArmorPickup_Vest",CustomName="Armor +50")
+    
+    ; defaults for various run-time settings
+    bDefaultFirstPerson=false
+    bFollowKiller=false
+    bFollowPowerup=false
 
 == Source code ==
 Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI

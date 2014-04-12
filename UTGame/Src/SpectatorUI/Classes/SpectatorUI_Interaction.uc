@@ -74,7 +74,7 @@ static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorU
     // have to insert it first so it can intercept bound keys
     PC.Interactions.InsertItem(0, SUI_Interaction);
 
-    SUI_Interaction.Settings = new(None, "SpectatorUI") class'SpectatorUI_ClientSettings';
+    SUI_Interaction.LoadSettings();
 
 
     return SUI_Interaction;
@@ -119,6 +119,11 @@ event PostRender(Canvas Canvas) {
         return;
     }
 
+    if (!bForceBehindView != Settings.bDefaultFirstPerson) {
+        Settings.bDefaultFirstPerson = !bForceBehindView;
+        Settings.SaveConfig();
+    }
+
     LP = LocalPlayer(Player);
 
     // even though SpectatorUI works fine with "temporary" spectators
@@ -159,6 +164,20 @@ event PostRender(Canvas Canvas) {
     RenderNowViewing(Canvas);
 }
 
+function LoadSettings() {
+    Settings = new(None, "SpectatorUI") class'SpectatorUI_ClientSettings';
+
+    if (Settings.bFollowPowerup) {
+        SpectatorUI_FollowPowerup(true);
+    }
+    if (Settings.bFollowKiller) {
+        SpectatorUI_FollowKiller(true);
+    }
+    if (Settings.bDefaultFirstPerson) {
+        bForceBehindView = false; 
+    }
+}
+
 function Spectate() {
     RI.ServerSpectate();
 }
@@ -169,10 +188,15 @@ exec function cg_followPowerup(bool x) {
 
 exec function SpectatorUI_FollowPowerup(bool x) {
     bFollowPowerup = x;
+    Settings.bFollowPowerup = bFollowPowerup;
+    Settings.SaveConfig();
 }
 
 exec function cg_followKiller(bool x) {
     SpectatorUI_FollowKiller(x);
+
+    Settings.bFollowKiller = x;
+    Settings.SaveConfig();
 }
 
 exec function SpectatorUI_FollowKiller(bool x) {
