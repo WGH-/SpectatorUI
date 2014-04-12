@@ -112,10 +112,6 @@ To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add 
     ; `s - with player nickname
     PickupNotificationPattern=`o picked up by `s 
 
-    ; same with flags
-    RedFlagNotificationPattern=`s took the red flag.
-    BlueFlagNotificationPattern=`s took the blue flag.
-
     ; if you wish, you can customize pickup names like this
     ; full list of pickup classes included in stock game
     ; is listed in the appendix

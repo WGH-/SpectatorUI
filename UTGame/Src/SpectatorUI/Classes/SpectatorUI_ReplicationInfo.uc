@@ -67,6 +67,9 @@ simulated function Actor GetBestViewTarget(Actor A) {
     if (UTCTFFlag(A) != None) {
         return UTCTFFlag(A).HomeBase.GetBestViewTarget();
     }
+    if (UTOnslaughtFlag(A) != None) {
+        return UTOnslaughtFlag(A).HomeBase.GetBestViewTarget();
+    }
     return A;
 }
 
@@ -465,17 +468,25 @@ simulated function RealScoreKill(PlayerReplicationInfo Killer, PlayerReplication
     }
 }
 
-function FlagTaken(UTCTFBase FlagBase, Controller EventInstigator)
+function FlagEvent(UTGameObjective FlagBase, name EventType, Controller EventInstigator)
 {
+    local UTCarriedObject Subject;
+
+    if (UTCTFBase(FlagBase) != None) {
+        Subject = UTCTFBase(FlagBase).myFlag;
+    } else if (UTOnslaughtFlagBase(FlagBase) != None) {
+        Subject = UTOnslaughtFlagBase(FlagBase).myFlag;
+    }
+
     if (Owner.IsInState('Spectating')) {
-        AddInterestingActor(FlagBase.myFlag);
-        DemoAddInterestingActor(FlagBase.myFlag);
-        ClientFlagTaken(FlagBase.myFlag.GetTeamNum(), EventInstigator.PlayerReplicationInfo);
+        AddInterestingActor(Subject);
+        DemoAddInterestingActor(Subject);
+        ClientFlagEvent(Subject, EventType, EventInstigator.PlayerReplicationInfo);
     }   
 }
 
-reliable client function ClientFlagTaken(byte Team, PlayerReplicationInfo Who) {
-    SUI.FlagTaken(Team, Who);
+reliable client function ClientFlagEvent(UTCarriedObject Flag, name EventType, PlayerReplicationInfo Who) {
+    SUI.FlagEvent(Flag, EventType, Who);
 }
 
 reliable server function ServerSetFollowKiller(bool x)

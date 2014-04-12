@@ -859,26 +859,55 @@ function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplic
     PrintNotification(Desc);
 }
 
-function FlagTaken(byte Team, PlayerReplicationInfo Who) {
-    local string Desc;
+function FlagEvent(UTCarriedObject Flag, name EventType, PlayerReplicationInfo Who) {
+    local string Verb, Desc, Object;
+    local byte Team;
 
-    if (Team == 0 && Settings.RedFlagNotificationPattern != "") {
-        Desc = Settings.RedFlagNotificationPattern;
-    } else if (Team != 0 && Settings.BlueFlagNotificationPattern != "") {
-        Desc = Settings.BlueFlagNotificationPattern;
-    } else {
-        Desc = "`s";
-        if (Team == 0) {
-            Desc = Desc @ class'UTCTFMessage'.default.hasRed;
-        } else {
-            Desc = Desc @ class'UTCTFMessage'.default.hasBlue;
-        }
-        if (!bFollowPowerup) {
-            Desc = Desc @ "Press * to jump to that player.";
-        }
+    Team = Flag.GetTeamNum();
+
+    Desc = Who.GetPlayerAlias();
+
+    switch (EventType) {
+        case 'Taken': 
+            Verb = "taken"; 
+            break;
+        case 'Captured': 
+            if (UTOnslaughtFlag(Flag) != None) {
+                Verb = "captured node";
+            } else {
+                Verb = "captured";
+            }
+            break;
+        case 'Returned':
+            Verb = "returned";
+            break;
+        case 'Dropped':
+            Verb = "dropped";
+            break;
+        default:
+            Verb = "did something";
+            break;
     }
 
-    Desc = Repl(Desc, "`s", Who.GetPlayerAlias());
+    if (Team == 0) {
+        Object = "Red";
+    } else {
+        Object = "Blue";
+    }
+    if (UTOnslaughtFlag(Flag) != None) {
+        Object = Object @ "orb";
+    } else {
+        Object = Object @ "flag";
+    }
+    
+    Desc = Object @ Verb;
+    if (Who != None) {
+        Desc = Desc @ "(by " $ Who.GetPlayerAlias() $ ")";
+    }
+    Desc = Desc $ ".";
+    if (!bFollowPowerup) {
+        Desc = Desc @ "Press * to jump to the objective.";
+    }
 
     if (bFollowPowerup) {
         RI.ViewPointOfInterest();

@@ -391,15 +391,10 @@ function PollWaitingForDeployableFactories() {
 
 function OnFlagEventTrigger(UTGameObjective EventOriginator, name EventType, Controller EventInstigator) {
     local SpectatorUI_ReplicationInfo RI;
-    local UTCTFBase UTCTFBase;
 
-    UTCTFBase = UTCTFBase(EventOriginator);
-
-    if (EventType == 'Taken') {
-        foreach RIs(RI) {
-            RI.FlagTaken(UTCTFBase, EventInstigator);
-        }   
-    }
+    foreach RIs(RI) {
+        RI.FlagEvent(EventOriginator, EventType, EventInstigator);
+    }   
 }
 
 function OnOnslaughtNodeEventTrigger(UTOnslaughtNodeObjective Node, Controller EventInstigator)
@@ -464,7 +459,7 @@ function HookKismetToggleActions(Sequence FakeParent) {
 
 function AttachSequenceObjectsToPickups() {
     local UTPickupFactory Factory;
-    local UTCTFBase UTCTFBase;
+    local UTGameObjective UTGameObjective;
     local UTOnslaughtNodeObjective Node;
 
     local SeqEvent_PickupStatusChange_Delegate PSC;
@@ -497,12 +492,17 @@ function AttachSequenceObjectsToPickups() {
         `log("Attached" @ PSC @ "to" @ Factory,, 'SpectatorUI');
     }
 
-    foreach WorldInfo.AllNavigationPoints(class'UTCTFBase', UTCTFBase) {
+    foreach WorldInfo.AllNavigationPoints(class'UTGameObjective', UTGameObjective) {
+        if (UTCTFBase(UTGameObjective) == None && UTOnslaughtFlagBase(UTGameObjective) == None) {
+            // we're only interested in CTF flags and WAR orbs
+            continue;
+        }
+
         FE = new(None) class'UTSeqEvent_FlagEvent_Delegate';
-        FE.Originator = UTCTFBase;
+        FE.Originator = UTGameObjective;
         FE.OnTrigger = OnFlagEventTrigger;
         ModifyParentSequence(FE, FakeParent);
-        UTCTFBase.GeneratedEvents.AddItem(FE);
+        UTGameObjective.GeneratedEvents.AddItem(FE);
     }
 
     foreach WorldInfo.AllNavigationPoints(class'UTOnslaughtNodeObjective',Node) {
