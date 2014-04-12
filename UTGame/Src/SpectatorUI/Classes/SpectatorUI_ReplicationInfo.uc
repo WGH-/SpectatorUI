@@ -37,6 +37,7 @@ var SpectatorUI_Mut Mut;
 var bool bTimeReplicated;
 var bool bOwnerReplicated;
 var bool bFollowKiller;
+var bool bUnattendedMode;
 
 // set on both
 var float ServerTimeSeconds; // time of last update
@@ -150,12 +151,15 @@ function NotifyBecomeSpectator() {
         ServerTimeDelta = 0; // it's always zero for local players
     }
 
+    UpdateUnattendedMode();
+
     Mut.UpdateAllRespawnTimesFor(self);
 }
 
 function NotifyBecomeActive() {
     // clear timer, in case it's active
     ClearTimer('TryReplicateTimeDelta');
+    UpdateUnattendedMode();
 }
 
 function ForceReplicateTimeDelta() {
@@ -485,6 +489,56 @@ simulated function SetFollowKiller(bool x)
         bFollowKiller = x;
     } else {
         ServerSetFollowKiller(x);
+    }
+}
+
+simulated function SetUnattendedMode(bool x) {
+    // note that it won't work with DemoRecSpectator
+    // unattended demoplaying doesn't makes much sense anyway
+    ServerSetUnattendedMode(x);
+}
+
+reliable protected server function ServerSetUnattendedMode(bool x) {
+    bUnattendedMode = x;
+    UpdateUnattendedMode();
+}
+
+protected function UpdateUnattendedMode() {
+    if (!bUnattendedMode || !Owner.IsInState('Spectating')) {
+        ClearTimer('UnattendedTimer');
+    }
+    if (bUnattendedMode) {
+        UnattendedTimer();
+        SetTimer(1.0, true, 'UnattendedTimer');
+    }
+}
+
+function PlayerReplicationInfo GetBestPlayer() {
+    local PlayerReplicationInfo PRI, BestPRI;
+
+    foreach WorldInfo.Game.GameReplicationInfo.PRIArray(PRI) {
+        if (class'SpectatorUI_Interaction'.static.IsValidSpectatorTarget(PRI) && (BestPRI == None || PRI.Score > BestPRI.Score)) {
+            BestPRI = PRI;
+        }
+    }
+    return BestPRI;
+}
+
+function UnattendedTimer() {
+    local PlayerReplicationInfo PRI;
+
+    if (!Owner.IsInState('Spectating')) {
+        UpdateUnattendedMode();
+        return;
+    }
+
+    if (PlayerController(Owner).RealViewTarget == None) {
+        // try to find anyone to watch
+        PRI = GetBestPlayer();
+        if (PRI != None) {
+            PlayerController(Owner).ClientMessage("Switching view target to the best player. Type 'SpectatorUI_UnattendedMode 0' to disable unattended mode.");
+            ViewPlayer(PRI);
+        }
     }
 }
 

@@ -16,6 +16,7 @@ var config bool bLargerPickupTimers;
 var config bool bFollowKiller;
 var config bool bFollowPowerup;
 var config bool bDefaultFirstPerson;
+var config bool bUnattendedMode;
 
 var config Name BookmarkModifierButton;
 var config Name ZoomButton;

@@ -59,6 +59,8 @@ The mutator exports a couple of exec functions, which you can use in your own bi
     SpectatorUI_FollowKiller <1|0> - automatically jump to player who frags anyone
     cg_followKiller <1|0> - same, Quake compatibility
 
+    SpectatorUI_UnattendedMode <1|0> - enable unattended mode (automatically ensure that camera is watching someone)
+
     ghost - make free camera ignore world geometry, passing right through it
 
 === Config file ===
@@ -123,6 +125,7 @@ To do so, open file UTSpectatorUI.ini (create it, if it doesn't exist), and add 
     bDefaultFirstPerson=false
     bFollowKiller=false
     bFollowPowerup=false
+    bUnattendedMode=false
 
 == Source code ==
 Source code is provided under terms of the Open Unreal Mod License, and is available on GitHub: https://github.com/WGH-/SpectatorUI

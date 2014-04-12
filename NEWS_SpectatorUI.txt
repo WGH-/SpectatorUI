@@ -7,6 +7,9 @@ XX.04.2014 SpectatorUI v2.5
       passing right through it.
     * Follow killer and powerup modes, and other settings are now saved into config, 
       and thus persist across map changes and game restarts.
+    * Added unattended mode (can be enabled with console command). When in this mode, 
+      it's ensured that camera always watches someone. By default, camera tends to
+      become free-roaming after map changes and when POV disconnects.
 
 31.03.2014 SpectatorUI v2.4
     * Fixed server crash on maps that don't have the default Kismet 

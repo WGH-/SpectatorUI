@@ -200,6 +200,9 @@ function LoadSettings() {
     if (Settings.bDefaultFirstPerson) {
         bForceBehindView = false; 
     }
+    if (Settings.bUnattendedMode) {
+        SpectatorUI_UnattendedMode(true);
+    }
 }
 
 function Spectate() {
@@ -294,6 +297,19 @@ exec function SpectatorUI_AddSpeed(float speed)
 exec function SpectatorUI_MultiplySpeed(float speed)
 {
     SpectatorCameraSpeed *= Speed;
+}
+
+exec function SpectatorUI_UnattendedMode(bool bEnable) 
+{
+    if (bEnable) {
+        // don't need manual
+        bShortManualShown = true;
+    }
+
+    RI.SetUnattendedMode(bEnable);
+    
+    Settings.bUnattendedMode = bEnable;
+    Settings.SaveConfig();
 }
 
 static final operator(18) float mod(int a, int b)
@@ -398,7 +414,7 @@ function bool HandleInptAxis(int ControllerId, name Key, float Delta, float Delt
     return false;
 }
 
-function bool IsValidSpectatorTarget(PlayerReplicationInfo PRI)
+static function bool IsValidSpectatorTarget(PlayerReplicationInfo PRI)
 {
     if (PRI == None || PRI.bOnlySpectator) return false;
     // special duel handling
