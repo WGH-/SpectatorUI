@@ -456,7 +456,7 @@ reliable demorecording function DemoScoreKill(PlayerReplicationInfo Killer, Play
 }
 
 simulated function RealScoreKill(PlayerReplicationInfo Killer, PlayerReplicationInfo Killed) {
-    if (Killed == PlayerController(Owner).RealViewTarget) {
+    if (bFollowKiller && Killed == PlayerController(Owner).RealViewTarget) {
         ViewPlayer(Killer);
     }
 }
