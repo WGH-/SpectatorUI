@@ -57,15 +57,13 @@ var array<SpectatorUI_RespawnTimer> RespawnTimers;
 
 
 static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorUI_ReplicationInfo newRI) {
-    local SpectatorUI_Interaction SUI_Interaction;
-    local int i;
+    local SpectatorUI_Interaction SUI_Interaction, OldInteraction;
 
     // remove existing one, if it exists
     // because it's left over from previous map after seamless travel
-    for (i = 0; i < PC.Interactions.length; i++) {
-        if (SpectatorUI_Interaction(PC.Interactions[i]) != None) {
-            PC.Interactions.Remove(i--, 1);
-        }
+    OldInteraction = FindInteraction(PC);
+    if (OldInteraction != None) {
+        OldInteraction.Cleanup(); 
     }
 
     SUI_Interaction = new(PC) default.class;
@@ -75,7 +73,6 @@ static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorU
     PC.Interactions.InsertItem(0, SUI_Interaction);
 
     SUI_Interaction.LoadSettings();
-
 
     return SUI_Interaction;
 }
@@ -88,6 +85,33 @@ static function SpectatorUI_Interaction FindInteraction(UTPlayerController PC) {
         }
     }
     return None;
+}
+
+function Cleanup() {
+    local int i;
+
+    // clean up timers on outer player controller
+    for (i = 0; i < Timers.length; i++) {
+        if (Timers[i].TimerObj == self) {
+            ClearTimer(Timers[i].FuncName, self);
+            
+            // I don't know how exactly ClearTimer works
+            // so restart search from the beginning
+            i = 0; 
+        }
+    }
+
+    PRIs.Length = 0;
+    RI = None;
+    
+    if (ShortManualRef != None) {
+        CloseManual();
+        ShortManualRef = None;
+    }
+    
+    RespawnTimers.Length = 0;
+
+    Interactions.RemoveItem(self);
 }
 
 function bool ShouldRender() {
@@ -105,7 +129,7 @@ event PostRender(Canvas Canvas) {
     super.PostRender(Canvas);
 
     if (RI == None || RI.bDeleteMe) {
-        Interactions.RemoveItem(self);
+        Cleanup();
         return;
     }
 
