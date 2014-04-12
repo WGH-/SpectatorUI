@@ -52,11 +52,13 @@ The mutator exports a couple of exec functions, which you can use in your own bi
     SpectatorUI_MultiplySpeed <multiplier> - multiplies camera speed by specified amount
     becomespectator - become spectator, if possible
 
-    SpectatorUI_FollowPowerup <1|0> - automatically jump to players who takes a powerup
+    SpectatorUI_FollowPowerup <1|0> - automatically jump to player who takes a powerup
     cg_followPowerup <1|0> - same, Quake compatibility
 
     SpectatorUI_FollowKiller <1|0> - automatically jump to player who frags anyone
     cg_followKiller <1|0> - same, Quake compatibility
+
+    ghost - make free camera ignore world geometry, passing right through it
 
 === Config file ===
 ==== Server ====

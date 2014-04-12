@@ -179,6 +179,16 @@ exec function SpectatorUI_FollowKiller(bool x) {
     RI.SetFollowKiller(x);
 }
 
+exec function Ghost() {
+    if (CheatManager != None) {
+        // pass it to CheatManager
+        CheatManager.Ghost();
+    } else {
+        // toggle it here
+        bCollideWorld = !bCollideWorld;
+    }
+}
+
 static function UTPawn_PostRenderFor(UTPawn P, PlayerController PC, Canvas Canvas, vector Loc, vector Dir) {
     local bool bPostRenderOtherTeam;
     local float TeamBeaconMaxDist;

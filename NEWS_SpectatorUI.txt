@@ -3,6 +3,8 @@ XX.04.2014 SpectatorUI v2.5
       It used to change it every time someone kills anyone on the server.
     * Follow powerup mode now ignores armor and health pickups.
     * Added "now viewing X" text when spectating from 1st person camera.
+    * Added "ghost" console command to make free camera ignore world geometry,
+      passing right through it.
 
 31.03.2014 SpectatorUI v2.4
     * Fixed server crash on maps that don't have the default Kismet 
