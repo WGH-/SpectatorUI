@@ -753,6 +753,16 @@ function UpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float Exp
     RespawnTimers[i].Flags = flags;
 }
 
+function bool ShouldFollowPickup(class<Actor> What) {
+    if (!bFollowPowerup) return false;
+
+    // ignore armor and (super-)health
+    if (class<UTArmorPickupFactory>(What) != None || class<UTHealthPickupFactory>(What) != None) return false;
+    
+    // everything else is fine
+    return true;
+}
+
 function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplicationInfo Who) {
     local string Desc;
 
@@ -768,7 +778,7 @@ function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplic
     Desc = Repl(Desc, "`o", GetPickupName(What));
     Desc = Repl(Desc, "`s", Who.GetPlayerAlias());
 
-    if (bFollowPowerup) {
+    if (ShouldFollowPickup(What)) {
         RI.ViewPointOfInterest(); 
     }
     
