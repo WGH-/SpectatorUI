@@ -51,6 +51,7 @@ var float LastBecomeSpectatorTime;
 
 // struct PointsOfInterestContainer "methods"
 
+// note: simulated only to support demos
 simulated function AddInterestingActor(Actor A) {
     PointsOfInterest.Actors[PointsOfInterest.Ptr] = A;
     PointsOfInterest.ReadPtr = PointsOfInterest.Ptr;
@@ -63,6 +64,7 @@ reliable demorecording function DemoAddInterestingActor(Actor A) {
     AddInterestingActor(A);
 }   
 
+// note: simulated only to support demos
 simulated function Actor GetBestViewTarget(Actor A) {
     if (UTCTFFlag(A) != None) {
         return UTCTFFlag(A).HomeBase.GetBestViewTarget();
@@ -73,6 +75,7 @@ simulated function Actor GetBestViewTarget(Actor A) {
     return A;
 }
 
+// note: simulated only to support demos
 simulated function Actor GetNextInterestingActor() {
     local Actor A;
     local int MinPtr;
@@ -277,6 +280,7 @@ reliable client function ClientUpdateRespawnTime(PickupFactory F, class<Actor> C
     SUI.UpdateRespawnTime(F, Clazz, i, ExpectedTime, flags);
 }
 
+// called from interaction
 simulated function ViewPointOfInterest() {
     if (DemoRecSpectator(Owner) != None) {
         DemoViewPointOfInterest();
