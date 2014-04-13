@@ -13,6 +13,8 @@ XX.04.2014 SpectatorUI v2.5
     * Warfare orb events (picked up, dropped, etc.) are now reported as well,
       with option to jump to the event's instigator.
     * Accidentally, flag pickup messages are no longer customizable (due to their complexity).
+    * Fixed maps without default Kismet sequence (again).
+      This time, pickup timers weren't updated after first event fired.
 
 31.03.2014 SpectatorUI v2.4
     * Fixed server crash on maps that don't have the default Kismet 

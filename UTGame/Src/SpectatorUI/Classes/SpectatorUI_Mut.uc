@@ -472,7 +472,7 @@ function AttachSequenceObjectsToPickups() {
     
     FakeParent = WorldInfo.GetGameSequence();
     if (FakeParent == None) {
-        FakeParent = new(None) class'Sequence';
+        FakeParent = new(None) class'FakeSequence';
     }
     
     foreach WorldInfo.AllNavigationPoints(class'UTPickupFactory', Factory) {
