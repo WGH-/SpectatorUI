@@ -39,6 +39,9 @@ var transient bool bZoomButtonHeld;
 
 var bool bFollowPowerup;
 
+// used for unattended mode
+var transient bool bMidgameMenuClosed;
+
 var SpectatorUI_ClientSettings Settings;
 
 // if ExpectedTime < 0, these flags give us additional info
@@ -143,6 +146,12 @@ event PostRender(Canvas Canvas) {
         return;
     }
 
+    if (Settings.bUnattendedMode && !bMidgameMenuClosed) {
+        if (MaybeCloseMidgameMenu()) {
+            bMidgameMenuClosed = true;
+        }
+    }
+
     if (!bForceBehindView != Settings.bDefaultFirstPerson) {
         Settings.bDefaultFirstPerson = !bForceBehindView;
         Settings.SaveConfig();
@@ -186,6 +195,18 @@ event PostRender(Canvas Canvas) {
     }
 
     RenderNowViewing(Canvas);
+}
+
+// returns true if menu was closed
+function bool MaybeCloseMidgameMenu() {
+    local UTGameReplicationInfo GRI;
+    GRI = UTGameReplicationInfo(WorldInfo.GRI);
+    
+    if (GRI != None && GRI.CurrentMidGameMenu != None) {
+        GRI.CurrentMidGameMenu.CloseScene(GRI.CurrentMidGameMenu);
+        return true;
+    }
+    return false;
 }
 
 function LoadSettings() {
