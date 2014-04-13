@@ -1,4 +1,4 @@
-XX.04.2014 SpectatorUI v2.5
+13.04.2014 SpectatorUI v2.5
     * Follow killer mode now changes players only if killer kills POV.
       It used to change it every time someone kills anyone on the server.
     * Follow powerup mode now ignores armor and health pickups.

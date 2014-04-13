@@ -3,12 +3,13 @@ SpectatorUI version 2.5
 This mutator greatly enhances spectator's convenience.
 
 Author: WGH, wgh@torlan.ru
-XX.04.2014
+13.04.2014
 
 == Features ==
  * Works offline, online and in server-recorded demos (provided mutator was active at the time of recording)
  * "Spectate" button available in mid game menu
  * Nicknames are displayed above players
+ * In first person view, POV nickname is displayed in the corner.
  * Convenient player selection menu available using the mouse scroll
  * Adjustable camera speed and FOV
  * Button that allows to switch to 3rd person camera 
