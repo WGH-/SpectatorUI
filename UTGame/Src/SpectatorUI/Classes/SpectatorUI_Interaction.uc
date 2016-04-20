@@ -123,7 +123,7 @@ function bool ShouldRender() {
 	local UTHUD HUD;
 	
 	// the same condition appears in UTHUD::DrawGameHud
-	if (PlayerReplicationInfo == none || !PlayerReplicationInfo.bOnlySpectator || !Outer.IsInState('Spectating'))
+	if (PlayerReplicationInfo == None || !(PlayerReplicationInfo.bOnlySpectator || Outer.IsInState('Spectating')))
 		return false;
 
 	// check if match is still running	
@@ -136,7 +136,7 @@ function bool ShouldRender() {
 	if (UTGRI != none && UTGRI.CurrentMidGameMenu != none)
 		return false;
 
-	// don't draw if scoreboard's up or HUD is hidden (e.g. in screenshot mode)
+	// don't draw if scoreboard's up or HUD is hidden (e.g. in screenshot mode). disregard no HUD
 	HUD = UTHUD(myHUD);
 	if (HUD != none && (HUD.bShowScores || !HUD.bShowHUD))
 		return false;
