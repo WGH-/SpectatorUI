@@ -118,31 +118,31 @@ function Cleanup() {
 }
 
 function bool ShouldRender() {
-	local GameReplicationInfo GRI;
-	local UTGameReplicationInfo UTGRI;
-	local UTHUD HUD;
-	
-	// the same condition appears in UTHUD::DrawGameHud
-	if (PlayerReplicationInfo == None || !(PlayerReplicationInfo.bOnlySpectator || Outer.IsInState('Spectating')))
-		return false;
+    local GameReplicationInfo GRI;
+    local UTGameReplicationInfo UTGRI;
+    local UTHUD HUD;
+    
+    // the same condition appears in UTHUD::DrawGameHud
+    if (PlayerReplicationInfo == None || !(PlayerReplicationInfo.bOnlySpectator || Outer.IsInState('Spectating')))
+        return false;
 
-	// check if match is still running	
-	GRI = WorldInfo.GRI;
-	if (GRI == none || GRI.bMatchIsOver)
-		return false;
+    // check if match is still running
+    GRI = WorldInfo.GRI;
+    if (GRI == none || GRI.bMatchIsOver)
+        return false;
 
-	// don't draw if mid game menu is opened
-	UTGRI = UTGameReplicationInfo(WorldInfo.GRI);
-	if (UTGRI != none && UTGRI.CurrentMidGameMenu != none)
-		return false;
+    // don't draw if mid game menu is opened
+    UTGRI = UTGameReplicationInfo(WorldInfo.GRI);
+    if (UTGRI != none && UTGRI.CurrentMidGameMenu != none)
+        return false;
 
-	// don't draw if scoreboard's up or HUD is hidden (e.g. in screenshot mode). disregard no HUD
-	HUD = UTHUD(myHUD);
-	if (HUD != none && (HUD.bShowScores || !HUD.bShowHUD))
-		return false;
-	
-	// finally allow render
-	return true;
+    // don't draw if scoreboard's up or HUD is hidden (e.g. in screenshot mode). disregard no HUD
+    HUD = UTHUD(myHUD);
+    if (HUD != none && (HUD.bShowScores || !HUD.bShowHUD))
+        return false;
+    
+    // finally allow render
+    return true;
 }
 
 event PostRender(Canvas Canvas) {
