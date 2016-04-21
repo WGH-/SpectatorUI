@@ -408,6 +408,11 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                             return true;
                         }
                         // otherwise, let ViewObjective handle it
+                    } else if (ShortManualRef != None) {
+                        if (BindString == "GBA_Use" || BindString == "GBA_ShowMenu") {
+                            CloseManual();
+                            return true;
+                        }
                     }
                 }
             } else if (EventType == IE_Released) {
