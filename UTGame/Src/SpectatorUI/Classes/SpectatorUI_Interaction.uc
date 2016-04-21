@@ -195,6 +195,7 @@ event PostRender(Canvas Canvas) {
     }
 
     RenderNowViewing(Canvas);
+    Canvas.Reset(false);
 }
 
 // returns true if menu was closed
