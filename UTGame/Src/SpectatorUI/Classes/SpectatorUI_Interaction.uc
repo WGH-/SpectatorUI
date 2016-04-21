@@ -456,7 +456,10 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                         SelectionNext(false);
                         return true;
                     } else if (BindString == "GBA_AltFire") {
-                        if (AnimatedCamera(PlayerCamera) == None) {
+                        if (SelectionInProgress >= SS_InProgress) {
+                            EndSelect(true);
+                            return true;
+                        } else if (AnimatedCamera(PlayerCamera) == None) {
                             GetPlayerViewPoint(Loc, Rot);
                             Rot.Roll = 0; // we don't really want dutch angle, do we?
                             
@@ -473,6 +476,9 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     } else if (BindString == "GBA_Fire") {
                         if (ShortManualRef != None) {
                             CloseManual();
+                            return true;
+                        } else if (SelectionInProgress >= SS_InProgress) {
+                            EndSelect();
                             return true;
                         }
                         // otherwise, let ViewObjective handle it
