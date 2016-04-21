@@ -374,7 +374,7 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     BookmarkModifierButtonHeld = true;
                 } else if (key == Settings.ZoomButton) {
                     bZoomButtonHeld = true; 
-                } else if (Key == 'Multiply') {
+                } else if (Key == Settings.SwitchViewToButton) {
                     RI.ViewPointOfInterest();
                 } else if (Key == Settings.BehindViewKey) {
                     BehindView(); 
@@ -780,11 +780,12 @@ function bool OpenManual() {
 static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
     if (bInitialActivation) {
         UILabel(UIS.FindChild('ManualLabel', true)).SetValue(
-            "Number row - camera speed control\n" $
-            "LeftAlt + NumPad0-9 - save bookmark (camera position)\n" $
-            "NumPad0-9 - load bookmark\n" $
-            "Middle mouse button + mouse - zoom (field of view)\n" $
-            "Q - behind view (3rd person camera)\n"
+            Repl(Repl("Number row `m-`n - camera speed control", "`m", GetKeyName('Zero', "0")), "`n", GetKeyName('Nine', "9")) $ "\n" $
+            Repl(Repl(Repl("`k + `m-`n - save bookmark (camera position)", "`k", GetKeyName('LeftAlt')), "`m", GetKeyName('NumPadZero', "NumPad0")), "`n", GetKeyName('NumPadNine', "NumPad9")) $ "\n" $ 
+            Repl(Repl("`m-`n - load bookmark", "`m", GetKeyName('NumPadZero', "NumPad0")), "`n", GetKeyName('NumPadNine', "NumPad9")) $ "\n" $ 
+            Repl("`k + mouse - zoom (field of view) (double click to reset)", "`k", GetKeyName(class'SpectatorUI_ClientSettings'.default.ZoomButton, "Middle mouse button")) $ "\n" $ 
+            Repl("`k - behind view (3rd person camera)", "`k", GetKeyName(class'SpectatorUI_ClientSettings'.default.BehindViewKey)) $ "\n" $
+            Repl("`k - switch view to last point of interest (e.g. flag event, orb event)", "`k", GetKeyName(class'SpectatorUI_ClientSettings'.default.SwitchViewToButton)) $ "\n"
         );
     }
 }
@@ -831,6 +832,20 @@ function string GetPickupName(class<Actor> Clazz) {
     return string(Clazz.name);
 }
 
+static function string GetKeyName(coerce string KeyName, optional string DefaultName)
+{
+    local string str;
+    if (KeyName == "" || KeyName ~= "None") {
+        str = Localize("Generic", "None", "UTGameUI");
+    } else {
+        str = Localize("GameMappedStrings", "GMS_"$KeyName, "UTGameUI");
+    }
+    if (Len(str) == 0 || Left(str, 1) == "?") {
+        str = Len(DefaultName) > 0 ? DefaultName : KeyName;
+    }
+    return "["$str$"]";
+}
+
 function UpdateRespawnTime(PickupFactory F, class<Actor> Clazz, int i, float ExpectedTime, int flags) {
     local string PickupName;
     while (RespawnTimers.Length - 1 < i) {
@@ -866,7 +881,7 @@ function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplic
     } else {
         Desc = "`o has been picked up by `s.";
         if (!bFollowPowerup) {
-            Desc = Desc @ "Press * to jump to that player.";
+            Desc = Desc @ Repl("Press `k to jump to that player.", "`k", GetKeyName(Settings.SwitchViewToButton));
         }
     }
 
@@ -927,7 +942,7 @@ function FlagEvent(UTCarriedObject Flag, name EventType, PlayerReplicationInfo W
     }
     Desc = Desc $ ".";
     if (!bFollowPowerup) {
-        Desc = Desc @ "Press * to jump to the objective.";
+        Desc = Desc @ Repl("Press `k to jump to the objective.", "`k", GetKeyName(Settings.SwitchViewToButton));
     }
 
     if (bFollowPowerup) {
