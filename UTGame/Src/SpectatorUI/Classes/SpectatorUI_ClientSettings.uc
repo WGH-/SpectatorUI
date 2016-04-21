@@ -25,6 +25,10 @@ var config name BehindViewKey;
 var config float PlayerSwitchDelay;
 var config float PostPlayerSwitchDelay;
 
+var config name OverlayButton;
+var config float PickupTimerLineKeep;
+var config bool PickupTimerDrawLines;
+
 var config string PickupNotificationPattern;
 var config string RedFlagNotificationPattern, BlueFlagNotificationPattern;
 
@@ -55,4 +59,8 @@ defaultproperties
     
     PlayerSwitchDelay=0.5
     PostPlayerSwitchDelay=2.0
+
+    OverlayButton=LeftShift
+    PickupTimerLineKeep=2.0
+    PickupTimerDrawLines=true
 }
