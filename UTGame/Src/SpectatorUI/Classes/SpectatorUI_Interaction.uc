@@ -25,8 +25,13 @@ enum ESelectionState {
     SS_PostSelect
 };
 var ESelectionState SelectionInProgress;
+var byte SelectionMode;
+var bool ForceSelectionClose;
 
 var string SelectedPrefix;
+
+const SELECTIONMODE_PLAYERS = 1;
+const SELECTIONMODE_EVENTS = 2;
 
 var bool BookmarkModifierButtonHeld;
 var SpectatorUI_Bookmarks Bookmarks;
@@ -60,6 +65,25 @@ struct SpectatorUI_RespawnTimer {
 };
 var array<SpectatorUI_RespawnTimer> RespawnTimers;
 
+// cached events
+struct SpectatorUI_EventParm {
+    var class<Actor> PickupActors;
+    var name FlagEventType;
+    var string Message;
+};
+struct SpectatorUI_CachedEvent {
+    var Actor EventActor;
+    var PlayerReplicationInfo Instigator;
+    var SpectatorUI_EventParm EventParameters;
+    var float Time;
+    var float Expiring;
+};
+var array<SpectatorUI_CachedEvent> CachedEvents;
+var Actor LastEventActor;
+var PlayerReplicationInfo LastEventPRI;
+
+var array<SpectatorUI_CachedEvent> Events;
+var int SelectedEventIndex;
 
 static function SpectatorUI_Interaction Create(UTPlayerController PC, SpectatorUI_ReplicationInfo newRI) {
     local SpectatorUI_Interaction SUI_Interaction, OldInteraction;
@@ -107,6 +131,7 @@ function Cleanup() {
     }
 
     PRIs.Length = 0;
+    Events.Length = 0;
     RI = None;
     
     if (ShortManualRef != None) {
@@ -115,6 +140,7 @@ function Cleanup() {
     }
     
     RespawnTimers.Length = 0;
+    CachedEvents.Length = 0;
 
     Interactions.RemoveItem(self);
 }
@@ -212,7 +238,8 @@ event PostRender(Canvas Canvas) {
     RenderPickupTimers(Canvas);
 
     if (SelectionInProgress != SS_None) {
-        RenderPlayerList(Canvas);
+        if (SelectionMode == SELECTIONMODE_PLAYERS) RenderPlayerList(Canvas);
+        else if (SelectionMode == SELECTIONMODE_EVENTS) RenderEventList(Canvas);
     }
 
     if (bZoomButtonHeld) {
@@ -396,6 +423,12 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                 i = SpeedBinds.Find('Key', Key);
                 if (i != INDEX_NONE) {
                     SpectatorCameraSpeed = default.SpectatorCameraSpeed * GetCameraSpeedMultiplier(SpeedBinds[i].Value);
+                } else if (Key == 'Escape' && SelectionInProgress > SS_None) {
+                    EndSelect(true);
+                    return true;
+                } else if (Key == 'Enter' && SelectionInProgress == SS_InProgress) {
+                    EndSelect();
+                    return true;
                 } else if (key == Settings.BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = true;
                 } else if (key == Settings.ZoomButton) {
@@ -404,21 +437,29 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     } else {
                         bZoomButtonHeld = true; 
                     }
+                } else if (Settings.SelectSwitchViewToButton != '' && Key == Settings.SelectSwitchViewToButton) {
+                    MaybeViewPointOfInterest();
                 } else if (Key == Settings.SwitchViewToButton) {
-                    RI.ViewPointOfInterest();
+                    if (Settings.SelectSwitchViewToButton == '' && (PlayerInput.PressedKeys.Find('LeftAlt') != INDEX_NONE || PlayerInput.PressedKeys.Find('RightAlt') != INDEX_NONE))
+                        MaybeViewPointOfInterest();
+                    else
+                        RI.ViewPointOfInterest();
                 } else if (Key == Settings.BehindViewKey) {
                     BehindView(); 
                 } else if (BookmarkKeys.Find(Key) != INDEX_NONE) {
                     BookmarkButtonPressed(Key); 
                 } else {
                     if (BindString == "GBA_NextWeapon") {
-                        PlayerSelect(+1);
+                        SelectionNext(true);
                         return true;
                     } else if (BindString == "GBA_PrevWeapon") {
-                        PlayerSelect(-1);
+                        SelectionNext(false);
                         return true;
                     } else if (BindString == "GBA_AltFire") {
-                        if (AnimatedCamera(PlayerCamera) == None) {
+                        if (SelectionInProgress >= SS_InProgress) {
+                            EndSelect(true);
+                            return true;
+                        } else if (AnimatedCamera(PlayerCamera) == None) {
                             GetPlayerViewPoint(Loc, Rot);
                             Rot.Roll = 0; // we don't really want dutch angle, do we?
                             
@@ -435,6 +476,9 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                     } else if (BindString == "GBA_Fire") {
                         if (ShortManualRef != None) {
                             CloseManual();
+                            return true;
+                        } else if (SelectionInProgress >= SS_InProgress) {
+                            EndSelect();
                             return true;
                         }
                         // otherwise, let ViewObjective handle it
@@ -470,6 +514,121 @@ function bool HandleInptAxis(int ControllerId, name Key, float Delta, float Delt
     return false;
 }
 
+function MaybeViewPointOfInterest()
+{
+    local Actor A;
+    local PlayerReplicationInfo PRI;
+    ClearExpiredEvents();
+
+    if (CachedEvents.Length == 1) {
+        if (IsValidEventForSelection(CachedEvents[0])) {
+            A = CachedEvents[0].EventActor;
+            PRI = CachedEvents[0].Instigator;
+            CachedEvents.Length = 0;
+        }
+    } else if (CachedEvents.Length > 1) {
+        EventSelect();
+    } else if (LastEventActor != none) {
+        A = LastEventActor;
+        PRI = LastEventPRI;
+    }
+
+    if (A != none) {
+        LastEventActor = none;
+        LastEventPRI = none;
+        RI.SwitchViewToPointOfInterest(A, PRI);
+    }
+}
+
+function EndSelect(optional bool bAbort = false)
+{
+    if (bAbort) SelectionInProgress = SS_PostSelect;
+    ForceSelectionClose = true;
+    if (SelectionMode == SELECTIONMODE_PLAYERS) EndPlayerSelect();
+    else if (SelectionMode == SELECTIONMODE_EVENTS) EndEventSelect();
+    ForceSelectionClose = false;
+}
+
+function SelectionNext(bool bNext)
+{
+    // prioritize event selection if visible
+    if (SelectionMode == SELECTIONMODE_EVENTS && SelectionInProgress >= SS_InProgress) {
+        EventSelect(bNext ? +1 : -1);
+    } else {
+        PlayerSelect(bNext ? +1 : -1);
+    }
+}
+
+function bool IsValidEventForSelection(SpectatorUI_CachedEvent evnt)
+{
+    local array<SpectatorUI_CachedEvent> temparray;
+    if (evnt.EventActor == none) return false;
+
+    // simulated foreach to mimic Find(STRUCT)
+    temparray = CachedEvents;
+    temparray.RemoveItem(evnt);
+    if (temparray.Length == CachedEvents.Length) return false;
+
+    return true;
+}
+
+function EventSelect(optional int increment = 1)
+{
+    local int i;
+    local SpectatorUI_CachedEvent evt;
+
+    if (SelectionMode > 0 && SelectionMode != SELECTIONMODE_EVENTS) return;
+    SelectionMode = SELECTIONMODE_EVENTS;
+
+    if (SelectionInProgress == SS_None) {
+        SelectionInProgress = SS_InProgress;
+        Events.Length = 0;
+
+        for (i=0; i<CachedEvents.Length; i++) {
+            evt = CachedEvents[i];
+            if (IsValidEventForSelection(evt)) Events.AddItem(evt);
+        }
+        SelectedEventIndex = Events.Length-1;
+    } else {
+        SelectedEventIndex = (SelectedEventIndex + increment) mod Events.Length;
+    }
+    if (Events.Length == 0) {
+        SelectionInProgress = SS_None;
+        return;
+    }
+        
+    if (SelectionInProgress == SS_PostSelect) {
+        SelectionInProgress = SS_InProgress;
+    }
+    if (Settings.EventSwitchDelay > 0) {
+        SetTimer(Settings.EventSwitchDelay, false, 'EndEventSelect', self);
+    } else {
+        EndEventSelect();
+    }
+}
+
+function EndEventSelect()
+{
+    ClearTimer('EndEventSelect', self);
+    if (SelectionInProgress == SS_InProgress) {
+        SelectionInProgress = SS_PostSelect;
+    
+        RI.SwitchViewToPointOfInterest(Events[SelectedEventIndex].EventActor, Events[SelectedEventIndex].Instigator);
+        if (Settings.PostEventSwitchDelay > 0 && !ForceSelectionClose) {
+            SetTimer(Settings.PostEventSwitchDelay, false, 'EndEventSelect', self);
+        } else {
+            EndEventSelect();
+        }
+    } else if (SelectionInProgress == SS_PostSelect) {
+        SelectionInProgress = SS_None;
+        Events.Length = 0;
+        SelectionMode = 0;
+
+        LastEventActor = none;
+        LastEventPRI = none;
+    }
+}
+
 static function bool IsValidSpectatorTarget(PlayerReplicationInfo PRI)
 {
     if (PRI == None || PRI.bOnlySpectator) return false;
@@ -485,6 +644,9 @@ function PlayerSelect(int increment)
     local TeamInfo TI;
     local UTGameReplicationInfo UTGRI;
     local int TeamIndex;
+
+    if (SelectionMode > 0 && SelectionMode != SELECTIONMODE_PLAYERS) return;
+    SelectionMode = SELECTIONMODE_PLAYERS;
 
     if (SelectionInProgress == SS_None) {
         SelectionInProgress = SS_InProgress;
@@ -522,11 +684,12 @@ function PlayerSelect(int increment)
 
 function EndPlayerSelect()
 {
+    ClearTimer('EndPlayerSelect', self);
     if (SelectionInProgress == SS_InProgress) {
         SelectionInProgress = SS_PostSelect;
     
         RI.ViewPlayer(PRIs[SelectedPRIIndex]);
-        if (Settings.PostPlayerSwitchDelay > 0) {
+        if (Settings.PostPlayerSwitchDelay > 0 && !ForceSelectionClose) {
             SetTimer(Settings.PostPlayerSwitchDelay, false, 'EndPlayerSelect', self);
         } else {
             EndPlayerSelect();
@@ -534,6 +697,7 @@ function EndPlayerSelect()
     } else if (SelectionInProgress == SS_PostSelect) {
         SelectionInProgress = SS_None;
         PRIs.Length = 0;
+        SelectionMode = 0;
     }
 }
 
@@ -619,6 +783,105 @@ function RenderPlayerList(Canvas C)
         }
         C.SetPos(POS.x, Index * YL);
         C.DrawTextClipped(GetPlayerString(PRI)); 
+    }
+
+    C.ClipX = OldClipX;
+}
+
+function string GetEventString(SpectatorUI_CachedEvent evnt, optional out string Extra) {
+    local string s;
+    s = evnt.EventParameters.Message;
+    if (s == "") s = GetPickupName(evnt.EventActor.Class);
+    if (evnt.Time > 0.0) Extra = " @"$class'UTHUD'.static.FormatTime(evnt.Time);
+    return s;
+}
+
+function float GetLongestEventListEntry(Canvas C, optional bool IncludingExtra)
+{
+    local SpectatorUI_CachedEvent evt;
+    local float XL, YL;
+    local float Res;
+    local string s;
+    foreach Events(evt) {
+        s = GetEventString(evt, s)$(IncludingExtra ? s : "");
+        C.StrLen(s, XL, YL);
+        if (XL > Res) Res = XL;
+    }
+    return Res;
+}
+
+function RenderEventList(Canvas C)
+{
+    local UTHUD HUD;
+    local SpectatorUI_CachedEvent evnt;
+    local int Index;
+    local LinearColor LC;
+    local float XL, YL;
+    local vector2d POS;
+    local float OldClipX;
+    local string ExtraString;
+    HUD = UTHUD(myHUD);
+    if (HUD == None) return;
+    
+    C.Reset();
+    C.Font = HUD.GetFontSizeIndex(1);
+
+    C.StrLen(SelectedPrefix, XL, YL);
+    
+    // XXX why clock? to be honest, I forgot
+    POS = HUD.ResolveHudPosition(HUD.ClockPosition, 0, 0);
+    POS.x += 28 * HUD.ResolutionScale; // XXX magic constant = bad
+
+    C.SetOrigin(0.0, C.ClipY / 6);
+    OldClipX = C.ClipX;
+    C.ClipX = GetLongestEventListEntry(C, true) + 2 * POS.x;
+
+    C.SetPos(0.0, 0.0);
+    C.SetDrawColor(0, 0, 0, 150);
+    C.DrawRect(C.ClipX, YL * Events.Length);
+
+    for (Index=0; Index<Events.Length; Index++) {
+        evnt = Events[Index];
+        if (!IsValidEventForSelection(evnt)) {
+            Events.Remove(Index, 1);
+            SelectedEventIndex--;
+            Index--;
+
+            if (SelectedEventIndex < 0) SelectedEventIndex = Events.Length-1;
+            continue;
+        }
+
+        if (Index == SelectedEventIndex) {
+            // background for currently selected event
+            // should be darker
+            C.SetDrawColor(0, 0, 0, 200);
+            C.SetPos(0.0, Index * YL);
+            C.DrawRect(C.ClipX, YL);
+        }
+
+        if (evnt.EventActor.GetTeamNum() != 255) {
+            HUD.GetTeamcolor(evnt.EventActor.GetTeamNum(), LC);
+            C.SetDrawColor(
+                Clamp(LC.R * 255.0, 0, 255), 
+                Clamp(LC.G * 255.0, 0, 255),
+                Clamp(LC.B * 255.0, 0, 255)
+            );
+        } else {
+            // same color as in UTHUD::DisplayLeaderboard
+            C.SetDrawColor(200, 200, 200, 255);
+        }
+        if (Index == SelectedEventIndex) {
+            C.SetPos(POS.x - XL, Index * YL);
+            C.DrawTextClipped(SelectedPrefix);
+        }
+        C.SetPos(POS.x, Index * YL);
+        C.DrawTextClipped(GetEventString(evnt, ExtraString)); 
+        if (ExtraString != "") {
+            // same color as in UTHUD::DisplayLeaderboard
+            C.SetDrawColor(200, 200, 200, 255);
+            C.SetPos(C.ClipX-1, C.CurY);
+            C.DrawTextRA(ExtraString);
+        }
     }
 
     C.ClipX = OldClipX;
@@ -817,16 +1080,39 @@ function bool OpenManual() {
     return false;
 }
 
-static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
+function OnShortManualActivated_Instanced(UIScene UIS, bool bInitialActivation) {
     if (bInitialActivation) {
         UILabel(UIS.FindChild('ManualLabel', true)).SetValue(
             Repl(Repl("Number row `m-`n - camera speed control", "`m", GetKeyName('Zero', "0")), "`n", GetKeyName('Nine', "9")) $ "\n" $
             Repl(Repl(Repl("`k + `m-`n - save bookmark (camera position)", "`k", GetKeyName('LeftAlt')), "`m", GetKeyName('NumPadZero', "NumPad0")), "`n", GetKeyName('NumPadNine', "NumPad9")) $ "\n" $ 
             Repl(Repl("`m-`n - load bookmark", "`m", GetKeyName('NumPadZero', "NumPad0")), "`n", GetKeyName('NumPadNine', "NumPad9")) $ "\n" $ 
-            Repl("`k + mouse - zoom (field of view) (double click to reset)", "`k", GetKeyName(class'SpectatorUI_ClientSettings'.default.ZoomButton, "Middle mouse button")) $ "\n" $ 
-            Repl("`k - behind view (3rd person camera)", "`k", GetKeyName(class'SpectatorUI_ClientSettings'.default.BehindViewKey)) $ "\n" $
-            Repl("`k - switch view to last point of interest (e.g. flag event, orb event)", "`k", GetKeyName(class'SpectatorUI_ClientSettings'.default.SwitchViewToButton)) $ "\n"
+            Repl("`k + mouse - zoom (field of view) (double click to reset)", "`k", GetKeyName(Settings.ZoomButton, "Middle mouse button")) $ "\n" $ 
+            Repl("`k - behind view (3rd person camera)", "`k", GetKeyName(Settings.BehindViewKey)) $ "\n" $
+            (IsSwitchKeyOverridden() ? "" : Repl("`k - switch view to last point of interest (e.g. flag event, orb event)", "`k", GetSwitchToViewButtonString()) $ "\n") $
+            Repl("`kc - switch view to last point of interest but open selection if mulitple events happened", "`kc", GetSwitchToViewButtonString(true)) $ "\n"
         );
+    }
+}
+
+static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
+    local UTPlayerController UTPC;
+    local SpectatorUI_Interaction inter;
+    if (UIS != none && UIS.GetPlayerOwner() != none)
+    {
+        UTPC = UTPlayerController(UIS.GetPlayerOwner().Actor);
+        if (UTPC != none)
+        {
+            inter = FindInteraction(UTPC);
+            if (inter != none)
+            {
+                inter.OnShortManualActivated_Instanced(UIS, bInitialActivation);
+                return;
+            }
+        }
+    }
+
+    if (bInitialActivation) {
+        UILabel(UIS.FindChild('ManualLabel', true)).SetValue("Some problem occurred");
     }
 }
 
@@ -915,21 +1201,20 @@ function bool ShouldFollowPickup(class<Actor> What) {
 
 function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplicationInfo Who) {
     local string Desc;
+    local SpectatorUI_EventParm parm;
 
-    if (Settings.PickupNotificationPattern != "") {
-        Desc = Settings.PickupNotificationPattern;
-    } else {
-        Desc = "`o has been picked up by `s.";
-        if (!bFollowPowerup) {
-            Desc = Desc @ Repl("Press `k to jump to that player.", "`k", GetKeyName(Settings.SwitchViewToButton));
-        }
-    }
-
+    Desc = Settings.PickupNotificationPattern != "" ? Settings.PickupNotificationPattern : "`o has been picked up by `s.";
     Desc = Repl(Desc, "`o", GetPickupName(What));
     Desc = Repl(Desc, "`s", Who.GetPlayerAlias());
 
     if (ShouldFollowPickup(What)) {
         RI.ViewPointOfInterest(); 
+    } else {
+        parm.PickupActors = What;
+        parm.Message = Desc;
+        AddEventToCache(F, Who, parm);
+
+        Desc = Desc @ Repl("Press `k to jump to that player.", "`k", GetSwitchToViewButtonString());
     }
     
     PrintNotification(Desc);
@@ -938,6 +1223,7 @@ function InterestingPickupTaken(PickupFactory F, class<Actor> What, PlayerReplic
 function FlagEvent(UTCarriedObject Flag, name EventType, PlayerReplicationInfo Who) {
     local string Verb, Desc, Object;
     local byte Team;
+    local SpectatorUI_EventParm parm;
 
     Team = Flag.GetTeamNum();
 
@@ -982,7 +1268,10 @@ function FlagEvent(UTCarriedObject Flag, name EventType, PlayerReplicationInfo W
     }
     Desc = Desc $ ".";
     if (!bFollowPowerup) {
-        Desc = Desc @ Repl("Press `k to jump to the objective.", "`k", GetKeyName(Settings.SwitchViewToButton));
+        parm.FlagEventType = EventType;
+        parm.Message = Desc;
+        AddEventToCache(Flag, Who, parm);
+        Desc = Desc @ Repl("Press `k to jump to the objective.", "`k", GetSwitchToViewButtonString());
     }
 
     if (bFollowPowerup) {
@@ -1036,6 +1325,58 @@ function bool IsKeyDoubleclicked(name Key, EInputEvent EventType)
     LastDoubleclickCheck = WorldInfo.RealTimeSeconds;
     LastDoubleclickButton = Key;
     return bIsDoubleclick;
+}
+
+function bool IsSwitchKeyOverridden()
+{
+    local name k, n;
+    k = Settings.SelectSwitchViewToButton;
+    n = Settings.SwitchViewToButton;
+    return (k != '' && (k == n || n == ''));
+}
+
+function string GetSwitchToViewButtonString(optional bool bAlternate)
+{
+    local name Key;
+    local string s;
+    // XXX move OnShortManualActivated to instanced context to switch this to instanced context
+    Key = Settings.SelectSwitchViewToButton;
+    if (Key == '') Key = Settings.SwitchViewToButton;
+    s = GetKeyName(Key);
+    if (bAlternate && !IsSwitchKeyOverridden()) s = GetKeyName('LeftAlt') $" + "$s;
+    return s;
+}
+
+function AddEventToCache(Actor EventActor, PlayerReplicationInfo Who, SpectatorUI_EventParm parm) {
+    local SpectatorUI_CachedEvent evt;
+
+    // also remove entry with same event actor as this new one
+    ClearExpiredEvents(EventActor);
+
+    evt.EventActor = EventActor;
+    evt.Instigator = Who;
+    evt.EventParameters = parm;
+    evt.Time = WorldInfo.GRI.TimeLimit != 0 ? WorldInfo.GRI.RemainingTime : WorldInfo.GRI.ElapsedTime;
+    evt.Expiring = WorldInfo.RealTimeSeconds + Settings.EventTimeout;
+    CachedEvents.AddItem(evt);
+
+    // fallback
+    LastEventActor = EventActor;
+    LastEventPRI = Who;
+    if (SelectionInProgress != SS_None && SelectionMode == SELECTIONMODE_EVENTS) {
+        Events.AddItem(evt);
+    }
+}
+
+function ClearExpiredEvents(optional Actor EventActorToRemove) {
+    local int i;
+    for (i=CachedEvents.Length-1; i>=0; i--) {
+        if (CachedEvents[i].Expiring < WorldInfo.RealTimeSeconds
+            || CachedEvents[i].EventActor == none
+            || CachedEvents[i].EventActor == EventActorToRemove) {
+            CachedEvents.Remove(i, 1);
+        }
+    }
 }
 
 defaultproperties

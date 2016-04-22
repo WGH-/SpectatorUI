@@ -23,9 +23,14 @@ var config Name BookmarkModifierButton;
 var config Name ZoomButton;
 var config name BehindViewKey;
 var config name SwitchViewToButton;
+var config name SelectSwitchViewToButton;
 
 var config float PlayerSwitchDelay;
 var config float PostPlayerSwitchDelay;
+var config float EventTimeout;
+
+var config float EventSwitchDelay;
+var config float PostEventSwitchDelay;
 
 var config string PickupNotificationPattern;
 var config string RedFlagNotificationPattern, BlueFlagNotificationPattern;
@@ -55,7 +60,12 @@ defaultproperties
     ZoomButton=MiddleMouseButton
     BehindViewKey=Q
     SwitchViewToButton=Multiply
+    SelectSwitchViewToButton=none
     
     PlayerSwitchDelay=0.5
     PostPlayerSwitchDelay=2.0
+
+    EventSwitchDelay=1.5
+    PostEventSwitchDelay=3.0
+    EventTimeout=15.0
 }

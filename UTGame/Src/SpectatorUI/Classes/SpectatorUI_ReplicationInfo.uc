@@ -294,7 +294,7 @@ reliable server protected function ServerViewPointOfInterest() {
     if (Owner.IsInState('BaseSpectating')) {
         A = GetNextInterestingActor();
         if (A == None) return;
-        PlayerController(Owner).SetViewTarget(A); 
+        SwitchViewToPointOfInterest(A);
     }
 }
 
@@ -302,8 +302,16 @@ simulated protected function DemoViewPointOfInterest() {
     local Actor A;
     A = GetNextInterestingActor();
     if (A == None) return;
+    SwitchViewToPointOfInterest(A);
+}
+
+simulated function SwitchViewToPointOfInterest(Actor A, optional PlayerReplicationInfo PRI) {
+    local Actor NewA;
+    if (PRI != none) NewA = PRI;
+    else if (UTCarriedObject(A) != none) NewA = UTCarriedObject(A).HolderPRI;
+    if (NewA != none) A = NewA;
     if (PlayerReplicationInfo(A) != None) {
-        DemoViewPlayer(PlayerReplicationInfo(A));
+        ViewPlayer(PlayerReplicationInfo(A));
     } else {
         PlayerController(Owner).SetViewTarget(A); 
     }
