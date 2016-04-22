@@ -36,6 +36,8 @@ var UIScene ShortManualRef; // reference to the scene containing short manual
 var bool bShortManualShown;
 
 var transient bool bZoomButtonHeld;
+var transient float LastDoubleclickCheck;
+var transient name LastDoubleclickButton;
 
 var bool bFollowPowerup;
 
@@ -396,7 +398,11 @@ function bool HandleInputKey(int ControllerId, name Key, EInputEvent EventType, 
                 } else if (key == Settings.BookmarkModifierButton) {
                     BookmarkModifierButtonHeld = true;
                 } else if (key == Settings.ZoomButton) {
-                    bZoomButtonHeld = true; 
+                    if (IsKeyDoubleclicked(Key, EventType)) {
+                        ZoomButtonReset();
+                    } else {
+                        bZoomButtonHeld = true; 
+                    }
                 } else if (Key == 'Multiply') {
                     RI.ViewPointOfInterest();
                 } else if (Key == Settings.BehindViewKey) {
@@ -783,6 +789,11 @@ function BookmarkButtonPressed(Name Key)
     }
 }
 
+function ZoomButtonReset()
+{
+    ResetFOV();
+}
+
 function bool OpenManual() {
     local GameUISceneClient SC;
     local UIScene UIS;
@@ -806,7 +817,7 @@ static function OnShortManualActivated(UIScene UIS, bool bInitialActivation) {
             "Number row - camera speed control\n" $
             "LeftAlt + NumPad0-9 - save bookmark (camera position)\n" $
             "NumPad0-9 - load bookmark\n" $
-            "Middle mouse button + mouse - zoom (field of view)\n" $
+            "Middle mouse button + mouse - zoom (field of view) [double click to reset]\n" $
             "Q - behind view (3rd person camera)\n"
         );
     }
@@ -970,6 +981,22 @@ function PrintNotification(string Message) {
     if (!Settings.bNotificationBeep) {
         myHUD.bMessageBeep = bOldBeep;
     }
+}
+
+function bool IsKeyDoubleclicked(name Key, EInputEvent EventType)
+{
+    local bool bIsDoubleclick;
+
+    // RealTimeSeconds as TimeSeconds is dilated therefore Doublelick would be different
+    bIsDoubleclick = EventType == IE_DoubleClick;
+    if (!bIsDoubleclick && WorldInfo.RealTimeSeconds - LastDoubleclickCheck < class'PlayerInput'.default.DoubleClickTime)
+    {
+        bIsDoubleclick = LastDoubleclickButton == Key;
+    }
+
+    LastDoubleclickCheck = WorldInfo.RealTimeSeconds;
+    LastDoubleclickButton = Key;
+    return bIsDoubleclick;
 }
 
 defaultproperties
