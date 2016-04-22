@@ -22,6 +22,7 @@ var config bool bUnattendedMode;
 var config Name BookmarkModifierButton;
 var config Name ZoomButton;
 var config name BehindViewKey;
+var config name SwitchViewToButton;
 
 var config float PlayerSwitchDelay;
 var config float PostPlayerSwitchDelay;
@@ -53,6 +54,7 @@ defaultproperties
     BookmarkModifierButton=LeftAlt
     ZoomButton=MiddleMouseButton
     BehindViewKey=Q
+    SwitchViewToButton=Multiply
     
     PlayerSwitchDelay=0.5
     PostPlayerSwitchDelay=2.0
