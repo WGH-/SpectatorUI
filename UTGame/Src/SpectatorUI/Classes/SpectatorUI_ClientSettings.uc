@@ -11,6 +11,7 @@ class SpectatorUI_ClientSettings extends Object
 
 var config bool bDisableHelp;
 var config bool bNotificationBeep;
+var config int NotificationMode;
 var config bool bLargerPickupTimers;
 
 var config bool bFollowKiller;
