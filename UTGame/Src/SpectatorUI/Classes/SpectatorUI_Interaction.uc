@@ -57,6 +57,7 @@ struct SpectatorUI_RespawnTimer {
     var float EstimatedRespawnTime;
     var PickupFactory PickupFactory;
     var int Flags;
+    var float VisibleTimestamp;
 };
 var array<SpectatorUI_RespawnTimer> RespawnTimers;
 
@@ -630,16 +631,21 @@ function RenderPickupTimers(Canvas C)
     local int i;
     local int SecondsLeft;
     local string s;
-    local float XL, YL;
+    local float XL, YL, LXL, LYL;
     local float FirstColumnSize;
     local color VisibleColor, HiddenColor;
     local LocalPlayer LP;
     local int flags;
+    local Vector ScreenLoc;
+    local Color TimerLineColor;
+    local Vector ViewLocation;
+    local Rotator ViewRotation;
 
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
 
     LP = LocalPlayer(Player);
+    GetPlayerViewPoint( ViewLocation, ViewRotation );
 
     VisibleColor = HUD.GoldColor;
     HiddenColor.R = VisibleColor.R / 5 * 3;
@@ -683,8 +689,26 @@ function RenderPickupTimers(Canvas C)
         
         if (LP.GetActorVisibility(RespawnTimers[i].PickupFactory)) {
             C.DrawColor = VisibleColor;
+            if (PlayerInput.PressedKeys.Find(Settings.OverlayButton) != INDEX_NONE) {
+                RespawnTimers[i].VisibleTimestamp = WorldInfo.RealTimeSeconds + Settings.PickupTimerLineKeep;
+            }
         } else {
             C.DrawColor = HiddenColor;
+        }
+
+        if (Settings.PickupTimerDrawLines && RespawnTimers[i].VisibleTimestamp > WorldInfo.RealTimeSeconds) {
+            TimerLineColor = C.DrawColor;
+            TimerLineColor.A = 10; //0.5;
+            C.StrLen(RespawnTimers[i].PickupName, LXL, LYL);
+            ScreenLoc = C.Project(RespawnTimers[i].PickupFactory.Location);
+            // correct screen position due to origin set
+            ScreenLoc.X -= C.OrgX;
+            ScreenLoc.Y -= C.OrgY;
+            if ((RespawnTimers[i].PickupFactory.Location - ViewLocation) dot vector(ViewRotation) > 0) {
+                C.Draw2DLine(FirstColumnSize+LXL+XL, C.CurY + 0.5*LYL,
+                             ScreenLoc.X, ScreenLoc.Y,
+                             C.DrawColor);
+            }
         }
 
         C.CurX = FirstColumnSize - XL;
