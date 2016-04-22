@@ -973,11 +973,29 @@ function FlagEvent(UTCarriedObject Flag, name EventType, PlayerReplicationInfo W
 
 function PrintNotification(string Message) {
     local bool bOldBeep;
+    if (WorldInfo.NetMode == NM_DedicatedServer || Settings.NotificationMode < 0) return;
+
+    // NotificationMode
+    //  0: full
+    //  1: HUD only
+    //  2: Console only
+    // <0: silent
+    
     bOldBeep = myHUD.bMessageBeep;
     if (!Settings.bNotificationBeep) {
         myHUD.bMessageBeep = false;
     }
-    ClientMessage(Message);
+
+    if (Settings.NotificationMode == 0 || Settings.NotificationMode == 1)
+        myHUD.Message(none, Message, 'Event');
+
+    if (Settings.NotificationMode == 0 || Settings.NotificationMode == 2) {
+        // XXX may be casted a lot, consider caching
+        if (LocalPlayer(Player) != none && LocalPlayer(Player).ViewportClient != none && LocalPlayer(Player).ViewportClient.ViewportConsole != none) {
+            LocalPlayer(Player).ViewportClient.ViewportConsole.OutputText(Message);
+        }
+    }
+
     if (!Settings.bNotificationBeep) {
         myHUD.bMessageBeep = bOldBeep;
     }
