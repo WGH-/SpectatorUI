@@ -565,16 +565,16 @@ function float GetLongestPlayerListEntry(Canvas C)
 function RenderPlayerList(Canvas C)
 {
     local UTHUD HUD;
-    local PlayerReplicationInfo PRI;
-    local int Index;
-    local LinearColor LC;
-    local float XL, YL;
+    local int Count, MaxCount, MaxElements;
+    local bool bTruncated;
+    local float TopY, XL, YL;
     local vector2d POS;
     local float OldClipX;
     HUD = UTHUD(myHUD);
     if (HUD == None) return;
     
     C.Reset();
+    HUD.Canvas = C; // XXX Canvas was cleared somehow. Set it back
     C.Font = HUD.GetFontSizeIndex(1);
 
     C.StrLen(SelectedPrefix, XL, YL);
@@ -587,20 +587,94 @@ function RenderPlayerList(Canvas C)
     OldClipX = C.ClipX;
     C.ClipX = GetLongestPlayerListEntry(C) + 2 * POS.x;
 
+    // calculate lines count for pagination
+    TopY = C.ClipY * 0.85 - 2*YL; // Spectator bar // XXX magic constant = bad
+    TopY -= 20 * HUD.ResolutionScale; // XXX magic constant = bad
+    MaxElements = Min(PRIs.Length, Max(2, (TopY - C.OrgY) / YL));
+    bTruncated = MaxElements != PRIs.Length;
+    if (bTruncated) {
+        MaxElements -= 2;
+        TopY = YL;
+    } else {
+        TopY = 0;
+    }
+
+    // draw background
     C.SetPos(0.0, 0.0);
     C.SetDrawColor(0, 0, 0, 150);
-    C.DrawRect(C.ClipX, YL * PRIs.Length);
+    C.DrawRect(C.ClipX, YL * MaxElements + (bTruncated ? 2*YL : 0.0));
 
-    foreach PRIs(PRI, Index) {
+    if (Settings.PlayerlistRenderMode == 1) {
+        Count = Max(0, SelectedPRIIndex - MaxElements + 1);
+        RenderPlayerListPart(C, HUD, 0+Count, MaxElements, false, Pos.X, TopY, XL, YL);
+
+        if (bTruncated) {
+            if (Count > 0) RenderPlayerListPager(C, HUD, Count, 0, YL, false);
+            
+            Count = PRIs.Length  - MaxElements - Count;
+            if (Count > 0) RenderPlayerListPager(C, HUD, Count, MaxElements+1, YL, true);
+        }
+    } else {
+        MaxCount = MaxElements / 2;
+        RenderPlayerListPart(C, HUD, SelectedPRIIndex-MaxCount, MaxCount, false, Pos.X, TopY, XL, YL);
+        RenderPlayerListPart(C, HUD, SelectedPRIIndex, MaxCount+(MaxElements % 2), false, Pos.X, TopY+MaxCount*YL, XL, YL);
+
+        if (bTruncated) {
+            Count = (SelectedPRIIndex-MaxCount) mod PRIs.Length;
+            if (Count > 0) RenderPlayerListPager(C, HUD, Count, 0, YL, false);
+
+            Count = (SelectedPRIIndex+MaxCount+(MaxElements % 2)) mod PRIs.Length;
+            Count = PRIs.Length - Count;
+            if (Count < PRIs.Length) RenderPlayerListPager(C, HUD, Count, MaxElements+1, YL, true);
+        }
+    }
+    C.ClipX = OldClipX;
+}
+
+function RenderPlayerListPager(Canvas C, UTHUD HUD, int Value, int Count, float LineHeight, bool bUp)
+{
+    local float TempXL, TempYL;
+    local string s, ls, rs;
+
+    ls = bUp ? "`L" : "`R";
+    rs = Repl("`L`R", ls, "");
+
+    s = "--- `L `x more `R ---";
+    C.Font = HUD.GetFontSizeIndex(0);
+    C.StrLen(S, TempXL, TempYL);
+    TempXL = (C.ClipX-TempXL)*0.5;
+    TempYL = (LineHeight - TempYL)*0.5;
+
+    C.SetDrawColor(255,255,255,255);
+    C.SetPos(TempXL, Count*LineHeight + TempYL);
+    C.DrawTextClipped(Repl(Repl(Repl(s, "`x", Value), ls, "\\"), rs, "/"));
+}
+
+function RenderPlayerListPart(Canvas C, UTHUD HUD, int StartIndex, int Count, bool Reverse, float PaddingX, float PaddingY, float XL, float YL)
+{
+    local int i, Index;
+    local float SlotY;
+    local PlayerReplicationInfo PRI;
+    local LinearColor LC;
+
+    for (Index=StartIndex; i<Count; Index=StartIndex+(Reverse?-1:1)*(++i)) {
+        Index = Index mod PRIs.Length;
+        PRI = PRIs[Index];
         if (PRI == None) continue;
+
+        SlotY = i * YL + PaddingY;
 
         if (Index == SelectedPRIIndex) {
             // background for currently selected player
             // should be darker
             C.SetDrawColor(0, 0, 0, 200);
-            C.SetPos(0.0, Index * YL);
+            C.SetPos(0.0, SlotY);
             C.DrawRect(C.ClipX, YL);
         }
+
+        // marking start/end of list. end and start are overlapping (e.g. in wheel mode)
+        if (Index == 0) C.Draw2DLine(0.0, SlotY, C.ClipX, SlotY, MakeColor(128,128,128,128));
+        else if (Index == PRIs.Length-1) C.Draw2DLine(0.0, SlotY+YL, C.ClipX, SlotY+YL, MakeColor(128,128,128,128));
 
         if (PRI.Team != None) {
             HUD.GetTeamcolor(PRI.GetTeamNum(), LC);
@@ -614,14 +688,12 @@ function RenderPlayerList(Canvas C)
             C.SetDrawColor(200, 200, 200, 255);
         }
         if (Index == SelectedPRIIndex) {
-            C.SetPos(POS.x - XL, Index * YL);
+            C.SetPos(PaddingX - XL, SlotY);
             C.DrawTextClipped(SelectedPrefix);
         }
-        C.SetPos(POS.x, Index * YL);
+        C.SetPos(PaddingX, SlotY);
         C.DrawTextClipped(GetPlayerString(PRI)); 
     }
-
-    C.ClipX = OldClipX;
 }
 
 function RenderPickupTimers(Canvas C)
