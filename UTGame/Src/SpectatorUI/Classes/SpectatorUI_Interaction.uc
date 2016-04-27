@@ -941,8 +941,6 @@ function FlagEvent(UTCarriedObject Flag, name EventType, PlayerReplicationInfo W
 
     Team = Flag.GetTeamNum();
 
-    Desc = Who.GetPlayerAlias();
-
     switch (EventType) {
         case 'Taken': 
             Verb = "taken"; 
