@@ -509,7 +509,7 @@ function AttachSequenceObjectsToPickups() {
         ONE = new(None) class'UTSeqEvent_OnslaughtNodeEvent_Delegate';
         ONE.Originator = Node;
         ONE.OnTrigger = OnOnslaughtNodeEventTrigger;
-        ModifyParentSequence(PSC, FakeParent);
+        ModifyParentSequence(ONE, FakeParent);
         Node.GeneratedEvents.AddItem(ONE);
     }
 
