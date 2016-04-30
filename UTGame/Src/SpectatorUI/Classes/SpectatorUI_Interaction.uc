@@ -202,11 +202,17 @@ event PostRender(Canvas Canvas) {
         if (!LP.GetActorVisibility(A)) continue;
 
         if (UTPawn(A) != None) {
-            UTPawn_PostRenderFor(UTPawn(A), Outer, Canvas, Loc, Dir);
+            // don't draw player beacon if it's the current view target
+            if (A != ViewTarget) {
+                UTPawn_PostRenderFor(UTPawn(A), Outer, Canvas, Loc, Dir);
+            }
         } else if (UTVehicle(A) != None) {
             UTVehicle_PostRenderFor(UTVehicle(A), Outer, Canvas, Loc, Dir);
         } else if (UTOnslaughtFlag(A) != None) {
-            UTOnslaughtFlag_PostRenderFor(UTOnslaughtFlag(A), Outer, Canvas, Loc, Dir);
+            // don't draw Orb beacon if the current view target is holding it
+            if (Outer.ViewTarget == none || UTOnslaughtFlag(A).Holder != Outer.ViewTarget) {
+                UTOnslaughtFlag_PostRenderFor(UTOnslaughtFlag(A), Outer, Canvas, Loc, Dir);
+            }
         }
     }
     RenderPickupTimers(Canvas);
